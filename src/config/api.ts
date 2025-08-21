@@ -12,6 +12,7 @@ import {
   ISkill,
   ISubscribers,
   IResponseImport,
+  IPeriod,
 } from "@/types/backend";
 import axios from "config/axios-customize";
 
@@ -72,6 +73,32 @@ export const callUploadSingleFile = (file: any, folderType: string) => {
       "Content-Type": "multipart/form-data",
     },
   });
+};
+
+/**
+ * 
+Module Period
+ */
+export const callCreatePeriod = (period: IPeriod) => {
+  return axios.post<IBackendRes<IPeriod>>("/api/v1/periods", { ...period });
+};
+
+export const callUpdatePeriod = (period: IPeriod) => {
+  return axios.put<IBackendRes<IPeriod>>(`/api/v1/periods`, { ...period });
+};
+
+export const callDeletePeriod = (id: string) => {
+  return axios.delete<IBackendRes<IPeriod>>(`/api/v1/periods/${id}`);
+};
+
+export const callFetchPeriod = (query: string) => {
+  return axios.get<IBackendRes<IModelPaginate<IPeriod>>>(
+    `/api/v1/periods?${query}`
+  );
+};
+
+export const callFetchPeriodById = (id: string) => {
+  return axios.get<IBackendRes<IPeriod>>(`/api/v1/periods/${id}`);
 };
 
 /**

@@ -10,6 +10,7 @@ import {
     AliwangwangOutlined,
     BugOutlined,
     ScheduleOutlined,
+    CalendarOutlined,
 } from '@ant-design/icons';
 import { Layout, Menu, Dropdown, Space, message, Avatar, Button } from 'antd';
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
@@ -50,6 +51,11 @@ const LayoutAdmin = () => {
                 && item.method === ALL_PERMISSIONS.USERS.GET_PAGINATE.method
             )
 
+            const viewPeriod = permissions?.find(item =>
+                item.apiPath === ALL_PERMISSIONS.PERIODS.GET_PAGINATE.apiPath
+                && item.method === ALL_PERMISSIONS.PERIODS.GET_PAGINATE.method
+            )
+
             const viewJob = permissions?.find(item =>
                 item.apiPath === ALL_PERMISSIONS.JOBS.GET_PAGINATE.apiPath
                 && item.method === ALL_PERMISSIONS.JOBS.GET_PAGINATE.method
@@ -87,6 +93,13 @@ const LayoutAdmin = () => {
                     key: '/admin/user',
                     icon: <UserOutlined />
                 }] : []),
+
+                ...(viewPeriod || ACL_ENABLE === 'false' ? [{
+                    label: <Link to='/admin/period'>Period</Link>,
+                    key: '/admin/period',
+                    icon: <CalendarOutlined />
+                }] : []),
+
                 ...(viewJob || ACL_ENABLE === 'false' ? [{
                     label: <Link to='/admin/job'>Job</Link>,
                     key: '/admin/job',
@@ -98,19 +111,18 @@ const LayoutAdmin = () => {
                     key: '/admin/resume',
                     icon: <AliwangwangOutlined />
                 }] : []),
+
                 ...(viewPermission || ACL_ENABLE === 'false' ? [{
                     label: <Link to='/admin/permission'>Permission</Link>,
                     key: '/admin/permission',
                     icon: <ApiOutlined />
                 }] : []),
+
                 ...(viewRole || ACL_ENABLE === 'false' ? [{
                     label: <Link to='/admin/role'>Role</Link>,
                     key: '/admin/role',
                     icon: <ExceptionOutlined />
                 }] : []),
-
-
-
             ];
 
             setMenuItems(full);

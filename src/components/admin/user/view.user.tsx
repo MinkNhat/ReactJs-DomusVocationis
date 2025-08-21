@@ -23,7 +23,7 @@ const ViewDetailUser = (props: IProps) => {
                 onClose={() => { onClose(false); setDataInit(null) }}
                 open={open}
                 width={"60vw"}
-                maskClosable={false}
+                maskClosable={true}
             >
                 <Descriptions title="" bordered column={2} layout="horizontal">
                     <Descriptions.Item label="Tên thánh">{dataInit?.christianName}</Descriptions.Item>

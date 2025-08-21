@@ -1,3 +1,7 @@
+/**
+ * 
+Interface utils
+ */
 export interface IBackendRes<T> {
   error?: string | string[];
   message: string;
@@ -37,6 +41,20 @@ export interface IAccount {
 
 export interface IGetAccount extends Omit<IAccount, "access_token"> {}
 
+export interface IResponseImport {
+  successCount: number;
+  errorCount: number;
+  errorDetails: {
+    index: number;
+    errMessage: string;
+  }[];
+}
+
+/**
+ * 
+Models Interface
+ */
+
 export interface ICompany {
   id?: string;
   name?: string;
@@ -60,37 +78,25 @@ export interface ISkill {
   updatedAt?: string;
 }
 
-// export interface IUser {
-//     id?: string;
-//     name: string;
-//     email: string;
-//     password?: string;
-//     age: number;
-//     gender: string;
-//     address: string;
-//     role?: {
-//         id: string;
-//         name: string;
-//     }
+export interface IPeriod {
+  id?: string;
+  name: string;
+  status: string;
+  maxSlots: number;
+  type: string;
+  startDate: Date;
+  endDate: Date;
+  registrationStartTime: Date;
+  registrationEndTime: Date;
+  peoplePerSession?: number;
+  excludedDaysOfWeek?: number[];
+  allowedSessions?: string[];
 
-//     company?: {
-//         id: string;
-//         name: string;
-//     }
-//     createdBy?: string;
-//     isDeleted?: boolean;
-//     deletedAt?: boolean | null;
-//     createdAt?: string;
-//     updatedAt?: string;
-// }
-
-export interface IResponseImport {
-  successCount: number;
-  errorCount: number;
-  errorDetails: {
-    index: number;
-    errMessage: string;
-  }[];
+  createdBy?: string;
+  isDeleted?: boolean;
+  deletedAt?: boolean | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface IUser {

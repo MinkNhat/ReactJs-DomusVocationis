@@ -1,8 +1,8 @@
-import { ModalForm, ProForm, ProFormDatePicker, ProFormDigit, ProFormInstance, ProFormItem, ProFormSelect, ProFormSwitch, ProFormText, StepsForm } from "@ant-design/pro-components";
-import { Button, Col, DatePicker, Form, Row, message, notification } from "antd";
+import { ModalForm, ProForm, ProFormDatePicker, ProFormSelect, ProFormSwitch, ProFormText, StepsForm } from "@ant-design/pro-components";
+import { Button, Col, Form, Row, message, notification } from "antd";
 import { isMobile } from 'react-device-detect';
-import { useState, useEffect, useRef } from "react";
-import { callCreateUser, callFetchCompany, callFetchRole, callUpdateUser } from "@/config/api";
+import { useState, useEffect } from "react";
+import { callCreateUser, callFetchRole, callUpdateUser } from "@/config/api";
 import { IUser } from "@/types/backend";
 import { DebounceSelect } from "./debouce.select";
 import { sfLike } from "spring-filter-query-builder";
@@ -28,7 +28,7 @@ const ModalUser = (props: IProps) => {
     const [loading, setLoading] = useState(false);
     const [form] = Form.useForm();
 
-    const initialValuesCommon = dataInit?.id ? {
+    const initialValues = dataInit?.id ? {
         ...dataInit,
         role: dataInit.role?.id ? { label: dataInit.role?.name, value: dataInit.role?.id } : null,
     } : {};
@@ -267,7 +267,7 @@ const ModalUser = (props: IProps) => {
                     <StepsForm.StepForm
                         name="user-info"
                         title="Thông tin cá nhân"
-                        initialValues={initialValuesCommon}
+                        initialValues={initialValues}
                         onFinish={async () => {
                             setLoading(true);
                             await waitTime(500);
@@ -378,7 +378,7 @@ const ModalUser = (props: IProps) => {
                     <StepsForm.StepForm
                         name="other-info"
                         title="Thông tin khác"
-                        initialValues={initialValuesCommon}
+                        initialValues={initialValues}
                     >
                         <Row gutter={24}>
                             <Col lg={12} md={12} sm={24} xs={24}>

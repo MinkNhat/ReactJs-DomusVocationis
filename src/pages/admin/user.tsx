@@ -4,7 +4,7 @@ import { fetchUser } from "@/redux/slice/userSlide";
 import { IUser } from "@/types/backend";
 import { DeleteOutlined, EditOutlined, PlusOutlined, ExportOutlined, CloudUploadOutlined } from "@ant-design/icons";
 import { ActionType, ProColumns } from '@ant-design/pro-components';
-import { App, Button, Popconfirm, Space, Tag, notification } from "antd";
+import { App, Badge, Button, Popconfirm, Space, Tag, notification } from "antd";
 import { useState, useRef, useEffect } from 'react';
 import dayjs from 'dayjs';
 import { callDeleteUser, callFetchRole } from "@/config/api";
@@ -13,7 +13,7 @@ import ModalUser from "@/components/admin/user/modal.user";
 import ViewDetailUser from "@/components/admin/user/view.user";
 import Access from "@/components/share/access";
 import { ALL_PERMISSIONS } from "@/config/permissions";
-import { sfGt, sfLike, sfLt } from "spring-filter-query-builder";
+import { sfGe, sfLe, sfLike } from "spring-filter-query-builder";
 import { convertGender, dateRangeValidate, FORMATE_DATE_TIME_VN } from "@/config/utils";
 import ImportUser from "@/components/admin/user/import.user";
 import { CSVLink } from "react-csv";
@@ -101,7 +101,7 @@ const UserPage = () => {
                         setOpenViewDetail(true);
                         setDataInit(record);
                     }}>
-                        {(index + 1) + (meta.page - 1) * (meta.pageSize)}
+                        <Badge color="#c3c3c3" count={(index + 1) + (meta.page - 1) * (meta.pageSize)}></Badge>
                     </a>)
             },
             hideInSearch: true,
@@ -299,7 +299,7 @@ const UserPage = () => {
                     value: false,
                 }
             ],
-            onFilter: (value, record) => record.gender === value,
+            onFilter: (value, record) => record.active === value,
         },
 
         {
@@ -427,7 +427,7 @@ const UserPage = () => {
         }
         const createDateRange = dateRangeValidate(params.createdAtRange);
         if (createDateRange) {
-            filters.push(`${sfGt("createdAt", createDateRange[0])} and ${sfLt("createdAt", createDateRange[1])}`);
+            filters.push(`${sfGe("createdAt", createDateRange[0])} and ${sfLe("createdAt", createDateRange[1])}`);
         }
 
         if (filters.length > 0) {

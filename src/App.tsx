@@ -22,6 +22,7 @@ import PermissionPage from './pages/admin/permission';
 import ResumePage from './pages/admin/resume';
 import RolePage from './pages/admin/role';
 import UserPage from './pages/admin/user';
+import PeriodPage from './pages/admin/period';
 import { fetchAccount } from './redux/slice/accountSlide';
 import LayoutApp from './components/share/layout.app';
 import ViewUpsertJob from './components/admin/job/upsert.job';
@@ -106,6 +107,13 @@ export default function App() {
           element:
             <ProtectedRoute>
               <UserPage />
+            </ProtectedRoute>
+        },
+        {
+          path: "period",
+          element:
+            <ProtectedRoute>
+              <PeriodPage />
             </ProtectedRoute>
         },
 
