@@ -91,12 +91,26 @@ export interface IPeriod {
   peoplePerSession?: number;
   excludedDaysOfWeek?: number[];
   allowedSessions?: string[];
+  currentUsers: number;
 
   createdBy?: string;
   isDeleted?: boolean;
   deletedAt?: boolean | null;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface IListSlots {
+  id: number;
+  slots: {
+    id: number;
+    registrationDate: Date;
+    sessionTime: string;
+    users: {
+      id: number;
+      full_name: string;
+    }[];
+  }[];
 }
 
 export interface IUser {

@@ -1,0 +1,204 @@
+import React, { useState, useEffect, useRef } from 'react';
+import {
+    AppstoreOutlined,
+    ExceptionOutlined,
+    ApiOutlined,
+    UserOutlined,
+    BankOutlined,
+    MenuFoldOutlined,
+    MenuUnfoldOutlined,
+    AliwangwangOutlined,
+    BugOutlined,
+    ScheduleOutlined,
+    CalendarOutlined,
+    VideoCameraOutlined,
+    UploadOutlined,
+    ContactsOutlined,
+    FireOutlined,
+    LogoutOutlined,
+    HomeFilled,
+    HeartTwoTone,
+    InfoCircleFilled,
+    InfoCircleOutlined,
+} from '@ant-design/icons';
+import { Layout, Menu, Dropdown, Space, message, Avatar, Button, theme } from 'antd';
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Link } from 'react-router-dom';
+import { callLogout } from 'config/api';
+import { useAppDispatch, useAppSelector } from '@/redux/hooks';
+import { isMobile } from 'react-device-detect';
+import type { MenuProps } from 'antd';
+import { setLogoutAction } from '@/redux/slice/accountSlide';
+import { ALL_PERMISSIONS } from '@/config/permissions';
+import styles from '@/styles/client.module.scss';
+
+const { Sider, Content, Footer } = Layout;
+
+// const { Content, Sider } = Layout;
+
+const LayoutClient = () => {
+    const location = useLocation();
+    const rootRef = useRef<HTMLDivElement>(null);
+
+    const [collapsed, setCollapsed] = useState(false);
+    const [activeMenu, setActiveMenu] = useState('');
+    const user = useAppSelector(state => state.account.user);
+    const [menuItems, setMenuItems] = useState<MenuProps['items']>([]);
+
+    const navigate = useNavigate();
+    const dispatch = useAppDispatch();
+    const isAuthenticated = useAppSelector(state => state.account.isAuthenticated);
+
+    useEffect(() => {
+        if (rootRef && rootRef.current) {
+            rootRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+        setActiveMenu(location.pathname)
+    }, [location]);
+
+    const handleLogout = async () => {
+        const res = await callLogout();
+        if (res && +res.statusCode === 200) {
+            dispatch(setLogoutAction({}));
+            message.success('Đăng xuất thành công');
+            navigate('/')
+        }
+    }
+
+    const itemsDropdown = [
+        {
+            label: <label
+                style={{ cursor: 'pointer' }}
+            // onClick={() => setOpenManageAccount(true)}
+            >Quản lý tài khoản</label>,
+            key: 'manage-account',
+            icon: <ContactsOutlined />
+        },
+        ...(user.role?.permissions?.length ? [{
+            label: <Link
+                to={"/admin"}
+            >Trang Quản Trị</Link>,
+            key: 'admin',
+            icon: <FireOutlined />
+        },] : []),
+
+        {
+            label: <label
+                style={{ cursor: 'pointer' }}
+                onClick={() => handleLogout()}
+            >Đăng xuất</label>,
+            key: 'logout',
+            icon: <LogoutOutlined />
+        },
+    ];
+
+    useEffect(() => {
+        const full = [
+            {
+                label: <Link to='/'>Dashboard</Link>,
+                key: '/',
+                icon: <AppstoreOutlined />
+            },
+
+            {
+                label: <Link to='/period'>Đăng ký lịch</Link>,
+                key: '/period',
+                icon: <InfoCircleOutlined />
+            },
+
+            {
+                label: <Link to='/schedule'>Lịch của tôi</Link>,
+                key: '/schedule',
+                icon: <InfoCircleOutlined />
+            },
+
+            {
+                label: <Link to='/info'>Thông tin cá nhân</Link>,
+                key: '/info',
+                icon: <InfoCircleOutlined />
+            },
+
+            // ...(viewRole || ACL_ENABLE === 'false' ? [{
+            //     label: <Link to='/admin/role'>Role</Link>,
+            //     key: '/admin/role',
+            //     icon: <ExceptionOutlined />
+            // }] : []),
+        ];
+
+        setMenuItems(full);
+    }, [])
+
+    return (
+        <>
+            <Layout
+                style={{ minHeight: '100vh' }}
+                className="layout-admin"
+            >
+                {!isMobile ?
+                    <Sider
+                        theme='light'
+                        collapsible
+                        collapsed={collapsed}
+                        onCollapse={(value) => setCollapsed(value)}>
+                        <div style={{ height: 32, margin: 16, textAlign: 'center' }}>
+                            <HomeFilled /> HOME
+                        </div>
+                        <Menu
+                            selectedKeys={[activeMenu]}
+                            mode="inline"
+                            items={menuItems}
+                            onClick={(e) => setActiveMenu(e.key)}
+                        />
+                    </Sider>
+                    :
+                    <Menu
+                        selectedKeys={[activeMenu]}
+                        items={menuItems}
+                        onClick={(e) => setActiveMenu(e.key)}
+                        mode="horizontal"
+                    />
+                }
+
+                <Layout>
+                    {!isMobile &&
+                        <div className='admin-header' style={{ display: "flex", justifyContent: "space-between", paddingRight: 20, backgroundColor: "#222831" }}>
+                            <Button
+                                type="text"
+                                icon={collapsed ? React.createElement(MenuUnfoldOutlined) : React.createElement(MenuFoldOutlined)}
+                                onClick={() => setCollapsed(!collapsed)}
+                                style={{
+                                    fontSize: '16px',
+                                    width: 64,
+                                    height: 64,
+                                    color: "white"
+                                }}
+                            />
+
+                            <div className={styles['extra']}>
+                                {isAuthenticated === false ?
+                                    <Link to={'/login'}>Đăng Nhập</Link>
+                                    :
+                                    <Dropdown menu={{ items: itemsDropdown }} trigger={['click']}>
+                                        <Space style={{ cursor: "pointer" }}>
+                                            <span>Welcome {user?.name}</span>
+                                            <Avatar> {user?.name?.substring(0, 2)?.toUpperCase()} </Avatar>
+
+                                        </Space>
+                                    </Dropdown>}
+                            </div>
+                        </div>
+                    }
+                    <Content style={{ padding: '15px' }}>
+                        <Outlet />
+                    </Content>
+                    <Footer style={{ padding: 10, textAlign: 'center', backgroundColor: "#222831" }}>
+                        <span style={{ color: "white" }}>Nguyen Minh Nhat &copy; 2025 <HeartTwoTone /></span>
+                    </Footer>
+                </Layout>
+            </Layout>
+
+        </>
+    )
+}
+
+export default LayoutClient;

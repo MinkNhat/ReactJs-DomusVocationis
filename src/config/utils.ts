@@ -5,6 +5,14 @@ import groupBy from "lodash/groupBy";
 import map from "lodash/map";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
+import img01 from "@/assets/patterns/img01.jpg";
+import img02 from "@/assets/patterns/img02.jpg";
+import img03 from "@/assets/patterns/img03.jpg";
+import img04 from "@/assets/patterns/img04.jpg";
+import img05 from "@/assets/patterns/img05.jpg";
+import img06 from "@/assets/patterns/img06.jpg";
+import img07 from "@/assets/patterns/img07.jpg";
+import img08 from "@/assets/patterns/img08.jpg";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -25,6 +33,10 @@ export const dateRangeValidate = (dateRange: any) => {
 
 export function convertToUTC(time: string, format: string) {
   return dayjs(time, format).utcOffset(7).utc().format(FORMATE_DATE_TIME_UTC);
+}
+
+export function getNowUTC() {
+  return dayjs().utc();
 }
 
 export const SKILLS_LIST = [
@@ -49,9 +61,14 @@ export const LOCATION_LIST = [
 ];
 
 export const PERIOD_TYPE_LIST = [
-  { label: "Nấu ăn", value: "COOKING", color: "magenta" },
-  { label: "Nghỉ phép", value: "VACATION", color: "purple" },
-  { label: "Khác", value: "OTHER", color: "" },
+  { label: "Nấu ăn", value: "COOKING", color: "magenta", icon: "HomeFilled" },
+  {
+    label: "Nghỉ phép",
+    value: "VACATION",
+    color: "purple",
+    icon: "HomeFilled",
+  },
+  { label: "Khác", value: "OTHER", color: "", icon: "HeartTwoTone" },
 ];
 
 export const PERIOD_STATUS_LIST = [
@@ -194,3 +211,14 @@ export function calcMaxSlots(
 
   return validDays * sessions.length * (peoplePerSession || 0);
 }
+
+export const PATTERN_IMAGES_LIST = [
+  img01,
+  img02,
+  img03,
+  img04,
+  img05,
+  img06,
+  img07,
+  img08,
+];

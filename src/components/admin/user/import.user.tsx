@@ -7,7 +7,6 @@ import { callBulkCreateUser } from "@/config/api";
 import { IUser } from "@/types/backend";
 import templateFile from "@/assets/template/user-import-template.xlsx?url";
 import { convertGender } from "@/config/utils";
-import test from "node:test";
 
 const { Dragger } = Upload;
 

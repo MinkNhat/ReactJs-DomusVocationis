@@ -128,6 +128,7 @@ const LayoutAdmin = () => {
             setMenuItems(full);
         }
     }, [permissions])
+
     useEffect(() => {
         setActiveMenu(location.pathname)
     }, [location])

@@ -1,21 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   createBrowserRouter,
-  Outlet,
   RouterProvider,
-  useLocation,
 } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import NotFound from 'components/share/not.found';
-import Loading from 'components/share/loading';
 import LoginPage from 'pages/auth/login';
 import RegisterPage from 'pages/auth/register';
 import LayoutAdmin from 'components/admin/layout.admin';
 import ProtectedRoute from 'components/share/protected-route.ts';
-import Header from 'components/client/header.client';
-import Footer from 'components/client/footer.client';
 import HomePage from 'pages/home';
-import styles from 'styles/app.module.scss';
+import styles from '@/styles/app.module.scss';
 import DashboardPage from './pages/admin/dashboard';
 import CompanyPage from './pages/admin/company';
 import PermissionPage from './pages/admin/permission';
@@ -32,34 +27,13 @@ import ClientCompanyPage from './pages/company';
 import ClientCompanyDetailPage from './pages/company/detail';
 import JobTabs from './pages/admin/job/job.tabs';
 import { App as AntdApp } from 'antd';
-
-const LayoutClient = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const location = useLocation();
-  const rootRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (rootRef && rootRef.current) {
-      rootRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-
-  }, [location]);
-
-  return (
-    <div className='layout-app' ref={rootRef}>
-      <Header searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-      <div className={styles['content-app']}>
-        <Outlet context={[searchTerm, setSearchTerm]} />
-      </div>
-      <Footer />
-    </div>
-  )
-}
+import LayoutClient from './components/client/layout.client';
+import ClientPeriodPage from './pages/client/period';
+import ClientPeriodDetailPage from './pages/client/period/detail.period';
 
 export default function App() {
   const dispatch = useAppDispatch();
   const isLoading = useAppSelector(state => state.account.isLoading);
-
 
   useEffect(() => {
     if (
@@ -77,6 +51,9 @@ export default function App() {
       errorElement: <NotFound />,
       children: [
         { index: true, element: <HomePage /> },
+        { path: "period", element: <ClientPeriodPage /> },
+        { path: "period/:id", element: <ClientPeriodDetailPage /> },
+
         { path: "job", element: <ClientJobPage /> },
         { path: "job/:id", element: <ClientJobDetailPage /> },
         { path: "company", element: <ClientCompanyPage /> },

@@ -13,6 +13,7 @@ import {
   ISubscribers,
   IResponseImport,
   IPeriod,
+  IListSlots,
 } from "@/types/backend";
 import axios from "config/axios-customize";
 
@@ -99,6 +100,10 @@ export const callFetchPeriod = (query: string) => {
 
 export const callFetchPeriodById = (id: string) => {
   return axios.get<IBackendRes<IPeriod>>(`/api/v1/periods/${id}`);
+};
+
+export const callFetchSlotsByPeriod = (id: string) => {
+  return axios.get<IBackendRes<IListSlots>>(`/api/v1/periods/${id}/slots`);
 };
 
 /**
