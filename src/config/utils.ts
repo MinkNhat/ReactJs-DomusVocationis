@@ -73,7 +73,7 @@ export const PERIOD_TYPE_LIST = [
 
 export const PERIOD_STATUS_LIST = [
   { label: "Đang chờ", value: "PENDING", color: "gold" },
-  { label: "Mở", value: "OPENING", color: "blue" },
+  { label: "Mở", value: "OPENING", color: "green" },
   { label: "Đóng", value: "CLOSED", color: "" },
 ];
 

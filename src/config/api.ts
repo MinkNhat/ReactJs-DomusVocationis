@@ -14,6 +14,7 @@ import {
   IResponseImport,
   IPeriod,
   IListSlots,
+  ISlot,
 } from "@/types/backend";
 import axios from "config/axios-customize";
 
@@ -104,6 +105,15 @@ export const callFetchPeriodById = (id: string) => {
 
 export const callFetchSlotsByPeriod = (id: string) => {
   return axios.get<IBackendRes<IListSlots>>(`/api/v1/periods/${id}/slots`);
+};
+
+/**
+ * 
+Module Slot
+ */
+
+export const callRegistrationSlot = (id: string) => {
+  return axios.put<IBackendRes<ISlot>>(`/api/v1/slots`, { id: id });
 };
 
 /**

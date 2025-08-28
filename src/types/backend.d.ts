@@ -91,7 +91,7 @@ export interface IPeriod {
   peoplePerSession?: number;
   excludedDaysOfWeek?: number[];
   allowedSessions?: string[];
-  currentUsers: number;
+  currentUsers?: number;
 
   createdBy?: string;
   isDeleted?: boolean;
@@ -100,14 +100,35 @@ export interface IPeriod {
   updatedAt?: string;
 }
 
+export interface ISlot {
+  id: string;
+  registrationDate?: Date;
+  sessionTime?: string;
+  period?: {
+    id: string;
+    name: string;
+    status: string;
+    peoplePerSession: number;
+    allowedSessions: string[];
+  };
+  createdAt?: Date;
+  updatedAt?: Date;
+  users?: {
+    id: string;
+    full_name: string;
+  }[];
+  currentRegistrations?: number;
+  availableSlots?: number;
+}
+
 export interface IListSlots {
-  id: number;
+  id: string;
   slots: {
-    id: number;
+    id: string;
     registrationDate: Date;
     sessionTime: string;
     users: {
-      id: number;
+      id: string;
       full_name: string;
     }[];
   }[];

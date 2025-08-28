@@ -1,34 +1,16 @@
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ICompany, IListSlots, IPeriod } from "@/types/backend";
-import { callFetchCompanyById, callFetchPeriodById, callFetchSlotsByPeriod } from "@/config/api";
-import styles from 'styles/client.module.scss';
-import parse from 'html-react-parser';
-import { Col, Divider, Row, Skeleton, Badge, Typography, Card, Tag } from "antd";
+import { callFetchCompanyById, callFetchPeriodById, callFetchSlotsByPeriod, callRegistrationSlot } from "@/config/api";
+import { Col, Divider, Row, Skeleton, Badge, Typography, Card, Tag, Tooltip, Modal, Button, App } from "antd";
 import { EnvironmentOutlined, CalendarOutlined, TeamOutlined, ClockCircleOutlined } from "@ant-design/icons";
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import dayjs from 'dayjs';
+import { FORMATE_DATE_VN, PERIOD_STATUS_LIST } from "@/config/utils";
 
 const { Title, Text } = Typography;
-
-interface User {
-    id: number;
-    full_name: string;
-}
-
-interface Slot {
-    id: number;
-    registrationDate: string;
-    sessionTime: string;
-    users: User[];
-}
-
-interface SlotData {
-    id: number;
-    slots: Slot[];
-}
 
 interface CalendarEvent {
     id: string;
@@ -38,8 +20,13 @@ interface CalendarEvent {
     borderColor: string;
     textColor: string;
     extendedProps: {
+        id: string,
+        date: string;
         sessionTime: string;
-        users: User[];
+        users: {
+            id: string;
+            full_name: string;
+        }[];
         isAvailable: boolean;
     };
 }
@@ -47,32 +34,43 @@ interface CalendarEvent {
 const ClientPeriodDetailPage = (props: any) => {
     const [periodDetail, setPeriodDetail] = useState<IPeriod | null>(null);
     const [listSlot, setListSlot] = useState<IListSlots | null>(null);
+    const [eventInfo, setEventInfo] = useState<any>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [isRegistering, setIsRegistering] = useState(false);
+    const [openModal, setOpenModal] = useState<boolean>(false);
     const { id } = useParams<{ id: string }>();
+    const calendarRef = useRef<FullCalendar | null>(null);
+    const { message, notification } = App.useApp();
 
     useEffect(() => {
-        const init = async () => {
-            if (id) {
-                setIsLoading(true)
-
-                const resPeriod = await callFetchPeriodById(id);
-                if (resPeriod?.data) {
-                    setPeriodDetail(resPeriod.data);
-                }
-
-                const resSlots = await callFetchSlotsByPeriod(id);
-                if (resSlots?.data) {
-                    setListSlot(resSlots.data);
-                }
-
-                setIsLoading(false)
-            }
+        if (id) {
+            fetchPeriodDetail(id);
+            fetchListSlot(id);
         }
-
-        init();
     }, [id]);
 
-    // Convert slots to FullCalendar events
+    const fetchPeriodDetail = async (id: string) => {
+        setIsLoading(true)
+
+        const res = await callFetchPeriodById(id);
+        if (res?.data) {
+            setPeriodDetail(res.data);
+        }
+
+        setIsLoading(false)
+    }
+
+    const fetchListSlot = async (id: string) => {
+        setIsLoading(true)
+
+        const res = await callFetchSlotsByPeriod(id);
+        if (res?.data) {
+            setListSlot(res.data);
+        }
+
+        setIsLoading(false)
+    }
+
     const getCalendarEvents = (): CalendarEvent[] => {
         if (!listSlot || !listSlot.slots) return [];
 
@@ -94,7 +92,7 @@ const ClientPeriodDetailPage = (props: any) => {
                 borderColor = '#52c41a';
                 textColor = '#389e0d';
             } else {
-                title += ': Available';
+                // title += ': Available';
             }
 
             events.push({
@@ -105,6 +103,8 @@ const ClientPeriodDetailPage = (props: any) => {
                 borderColor,
                 textColor,
                 extendedProps: {
+                    id: slot.id,
+                    date: dayjs(slot.registrationDate).format(FORMATE_DATE_VN),
                     sessionTime: slot.sessionTime,
                     users: slot.users || [],
                     isAvailable: !hasUsers
@@ -115,17 +115,6 @@ const ClientPeriodDetailPage = (props: any) => {
         return events;
     };
 
-    // Get period status color
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case 'OPENING': return 'green';
-            case 'CLOSED': return 'red';
-            case 'PENDING': return 'orange';
-            default: return 'default';
-        }
-    };
-
-    // Get session time display
     const getSessionTimeDisplay = (sessionTime: string) => {
         switch (sessionTime) {
             case 'MORNING': return 'Buổi sáng';
@@ -135,28 +124,43 @@ const ClientPeriodDetailPage = (props: any) => {
         }
     };
 
-    // Handle event click
     const handleEventClick = (clickInfo: any) => {
-        const { extendedProps } = clickInfo.event;
-        const sessionTime = getSessionTimeDisplay(extendedProps.sessionTime);
+        setEventInfo(clickInfo);
+        setOpenModal(true);
+    };
 
-        if (extendedProps.users.length > 0) {
-            const userNames = extendedProps.users.map((u: User) => u.full_name).join('\n');
-            alert(`${sessionTime}\n\nRegistered users:\n${userNames}`);
+    const handleRegistration = async () => {
+        setIsRegistering(true);
+
+        // get view đang đứng -> sau khi reload vẫn ở lại view đó
+        const api = calendarRef.current?.getApi();
+        const currentView = api?.view;
+        const currentDate = currentView?.currentStart || api?.getDate();
+
+
+        const res = await callRegistrationSlot(eventInfo?.event?.extendedProps?.id);
+        if (res.data && res.statusCode === 200) {
+            message.success('Đăng ký thành công');
+
+            if (id) fetchListSlot(id);
+
+            setTimeout(() => {
+                const apiAfterReload = calendarRef.current?.getApi();
+                if (apiAfterReload && currentDate) {
+                    apiAfterReload.gotoDate(currentDate);
+                }
+            }, 100);
+
         } else {
-            alert(`${sessionTime}\n\nThis session is available for registration.`);
+            notification.error({
+                message: 'Có lỗi xảy ra',
+                description: res.message
+            });
         }
-    };
 
-    // Define valid date range
-    const getValidRange = () => {
-        if (!periodDetail || !periodDetail.startDate || !periodDetail.endDate) return {};
-
-        return {
-            start: dayjs(periodDetail.startDate, 'DD-MM-YYYY').format('YYYY-MM-DD'),
-            end: dayjs(periodDetail.endDate, 'DD-MM-YYYY').add(1, 'day').format('YYYY-MM-DD')
-        };
-    };
+        setIsRegistering(false);
+        setOpenModal(false);
+    }
 
     return (
         <>
@@ -174,7 +178,7 @@ const ClientPeriodDetailPage = (props: any) => {
                                             {periodDetail.name}
                                         </Title>
                                         <div style={{ marginTop: '12px', display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
-                                            <Tag color={getStatusColor(periodDetail.status)} style={{ fontSize: '14px', padding: '4px 12px' }}>
+                                            <Tag color={PERIOD_STATUS_LIST.find(s => s.value === periodDetail.status)?.color} style={{ fontSize: '14px', padding: '4px 12px' }}>
                                                 {periodDetail.status}
                                             </Tag>
                                             <Text>
@@ -240,6 +244,7 @@ const ClientPeriodDetailPage = (props: any) => {
                                 >
                                     <div style={{ height: '600px' }}>
                                         <FullCalendar
+                                            ref={calendarRef}
                                             plugins={[dayGridPlugin, interactionPlugin]}
                                             initialView="dayGridMonth"
                                             headerToolbar={{
@@ -247,22 +252,27 @@ const ClientPeriodDetailPage = (props: any) => {
                                                 center: 'title',
                                                 right: 'dayGridMonth,dayGridWeek'
                                             }}
+                                            buttonText={{
+                                                today: 'Hôm nay',
+                                                month: 'Tháng',
+                                                week: 'Tuần',
+                                                day: 'Ngày',
+                                            }}
                                             events={getCalendarEvents()}
                                             eventClick={handleEventClick}
-                                            validRange={getValidRange()}
                                             height="100%"
                                             eventDisplay="block"
-                                            dayMaxEvents={false}
+                                            dayMaxEvents={false} // số sk tối đa được hiển thị
                                             eventBackgroundColor="#f6ffed"
                                             eventBorderColor="#52c41a"
                                             eventTextColor="#389e0d"
                                             dayHeaderFormat={{ weekday: 'short' }}
-                                            locale="en"
+                                            locale="vi"
                                             firstDay={1}
                                             weekends={true}
                                             eventDidMount={(info) => {
-                                                // Add custom styling based on event properties
                                                 const { extendedProps } = info.event;
+
                                                 if (extendedProps.isAvailable) {
                                                     info.el.style.backgroundColor = '#f0f0f0';
                                                     info.el.style.borderColor = '#d9d9d9';
@@ -274,24 +284,9 @@ const ClientPeriodDetailPage = (props: any) => {
                                                 }
                                                 info.el.style.fontSize = '12px';
                                                 info.el.style.padding = '2px 4px';
-                                                info.el.style.margin = '1px 0';
+                                                info.el.style.margin = '2px 6px';
                                                 info.el.style.borderRadius = '4px';
                                                 info.el.style.cursor = 'pointer';
-                                            }}
-                                            dayCellDidMount={(info) => {
-                                                // Style disabled dates
-                                                const validRange = getValidRange();
-                                                const cellDate = dayjs(info.date).format('YYYY-MM-DD');
-                                                const startDate = validRange.start;
-                                                const endDate = validRange.end ? dayjs(validRange.end).subtract(1, 'day').format('YYYY-MM-DD') : undefined;
-
-                                                if (
-                                                    (startDate && cellDate < startDate) ||
-                                                    (endDate && cellDate > endDate)
-                                                ) {
-                                                    info.el.style.backgroundColor = '#f5f5f5';
-                                                    info.el.style.color = '#bfbfbf';
-                                                }
                                             }}
                                         />
                                     </div>
@@ -299,6 +294,108 @@ const ClientPeriodDetailPage = (props: any) => {
                             </Col>
                         </>
                     )}
+
+                    <Modal
+                        open={openModal}
+                        title="Xác nhận đăng ký"
+                        onCancel={() => setOpenModal(false)}
+                        width={600}
+                        footer={[
+                            <Button key="back" size="large" onClick={() => setOpenModal(false)}>
+                                Hủy
+                            </Button>,
+                            <Button
+                                key="submit"
+                                type="primary"
+                                size="large"
+                                loading={isRegistering}
+                                onClick={handleRegistration}
+                            // disabled={!eventInfo?.event?.extendedProps?.isAvailable}
+                            >
+                                Đăng ký
+                            </Button>
+                        ]}
+                    >
+                        <div style={{ padding: '16px 0' }}>
+                            {/* Session Info */}
+                            <Card size="small" style={{ marginBottom: '16px', backgroundColor: '#f8f9fa' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <ClockCircleOutlined style={{ color: '#1890ff' }} />
+                                    <Text strong>
+                                        {getSessionTimeDisplay(eventInfo?.event?.extendedProps?.sessionTime)}
+                                    </Text>
+
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <CalendarOutlined style={{ color: '#1890ff' }} />
+                                    <Text strong>
+                                        Ngày {eventInfo?.event?.extendedProps?.date}
+                                    </Text>
+
+                                </div>
+                            </Card>
+
+                            {/* User List */}
+                            <div>
+                                <div style={{ marginBottom: '6px' }}>
+                                    <TeamOutlined style={{ marginRight: '8px', color: '#1890ff' }} />
+                                    <Text>Danh sách người đã đăng ký:</Text>
+                                </div>
+
+                                {eventInfo?.event?.extendedProps?.users?.length > 0 ? (
+                                    <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                                        {eventInfo.event.extendedProps.users.map((user: any, index: number) => (
+                                            <Card key={user.id} size="small" style={{ marginBottom: '8px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                    <div
+                                                        style={{
+                                                            width: '32px',
+                                                            height: '32px',
+                                                            borderRadius: '50%',
+                                                            backgroundColor: '#1890ff',
+                                                            color: 'white',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            fontWeight: 'bold',
+                                                            fontSize: '14px'
+                                                        }}
+                                                    >
+                                                        {user.full_name?.charAt(0)?.toUpperCase() || 'U'}
+                                                    </div>
+                                                    <div>
+                                                        <Text strong>{user.full_name}</Text>
+                                                        <div>
+                                                            <Text type="secondary" style={{ fontSize: '12px' }}>
+                                                                ID: {user.id}
+                                                            </Text>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </Card>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div
+                                        style={{
+                                            textAlign: 'center',
+                                            padding: '40px 20px',
+                                            backgroundColor: '#f8f9fa',
+                                            borderRadius: '8px',
+                                            border: '2px dashed #d9d9d9'
+                                        }}
+                                    >
+                                        <TeamOutlined style={{ fontSize: '28px', color: '#bfbfbf', marginBottom: '12px' }} />
+                                        <div>
+                                            <Text type="secondary">
+                                                Hãy là người đầu tiên đăng ký!
+                                            </Text>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </Modal>
                 </Row>
             )}
         </>
