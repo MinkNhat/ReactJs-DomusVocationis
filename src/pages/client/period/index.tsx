@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Card, Button, Typography, Space, Tag, Spin, Row, Col, Empty, Tooltip } from 'antd';
-import { CalendarOutlined, TeamOutlined, DoubleRightOutlined, SwapRightOutlined } from '@ant-design/icons';
+import { CalendarOutlined, TeamOutlined, DoubleRightOutlined, SwapRightOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import dayjs, { Dayjs } from 'dayjs';
 import { IPeriod } from '@/types/backend';
-import { getNowUTC, PATTERN_IMAGES_LIST, PERIOD_TYPE_LIST } from '@/config/utils';
+import { FORMATE_DATE_TIME_VN, getNowUTC, PATTERN_IMAGES_LIST, PERIOD_TYPE_LIST } from '@/config/utils';
 import { useNavigate } from 'react-router-dom';
-import { callFetchPeriod } from '@/config/api';
+import { callFetchOpenPeriod, callFetchPeriod } from '@/config/api';
 import styles from '@/styles/client.module.scss';
 import { sfGe, sfEqual } from "spring-filter-query-builder";
 
@@ -24,11 +24,8 @@ const PeriodPage = () => {
     const fetchPeriod = async () => {
         setIsLoading(true)
 
-        const now = getNowUTC().toISOString();
-        let query = `filter= ${sfEqual("status", "OPENING")} and ${sfGe("registrationEndTime", now)}`;
-        query += "&sort=startDate,asc"
-
-        const res = await callFetchPeriod(query);
+        let query = "sort=startDate,asc";
+        const res = await callFetchOpenPeriod(query);
         if (res && res.data) {
             setPeriods(res.data.result);
         }
@@ -42,7 +39,6 @@ const PeriodPage = () => {
                 <Row gutter={[20, 24]} style={{ padding: "20px" }}>
                     {periods.map((period, index) => {
                         const img = PATTERN_IMAGES_LIST[index % PATTERN_IMAGES_LIST.length];
-
                         return (
                             <Col xs={24} sm={12} lg={6} xl={6} key={period.id}>
                                 <Card
@@ -57,6 +53,16 @@ const PeriodPage = () => {
                                             alignItems: "center",
                                             justifyContent: "center",
                                         }}>
+                                            <Tag
+                                                style={{
+                                                    position: "absolute",
+                                                    top: 8,
+                                                    right: 8,
+                                                }}
+                                                color='red'
+                                            >
+                                                <ClockCircleOutlined style={{ marginRight: '8px' }} />{dayjs(period.registrationEndTime).format("HH:mm DD-MM-YYYY")}
+                                            </Tag>
                                         </div>
                                     }
                                     actions={[
@@ -80,12 +86,6 @@ const PeriodPage = () => {
 
                                         description={
                                             <Space direction="vertical" size="small" style={{ width: '100%', gap: '8px', paddingTop: '12px' }}>
-                                                {/* <div>
-                                                    <Tag color={PERIOD_STATUS_LIST.find(t => t.value === period.status)?.color}>
-                                                        {PERIOD_STATUS_LIST.find(t => t.value === period.status)?.label}
-                                                    </Tag>
-                                                </div> */}
-
                                                 <div style={{ display: 'flex', alignItems: 'center' }}>
                                                     <Tag color={PERIOD_TYPE_LIST.find(t => t.value === period.type)?.color}>
                                                         Phiên {PERIOD_TYPE_LIST.find(t => t.value === period.type)?.label}
@@ -106,7 +106,7 @@ const PeriodPage = () => {
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                     <TeamOutlined />
                                                     <Text type="secondary" style={{ fontSize: '12px' }}>
-                                                        {period.currentUsers}/{period.maxSlots} người
+                                                        {period.currentUsers}/{period.totalSlot} người
                                                     </Text>
                                                 </div>
                                             </Space>

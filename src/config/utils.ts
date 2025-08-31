@@ -1,6 +1,6 @@
-import { IPermission } from "@/types/backend";
+import { IListSessions, IPermission, ISession } from "@/types/backend";
 import { grey, green, blue, red, orange } from "@ant-design/colors";
-import dayjs from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 import groupBy from "lodash/groupBy";
 import map from "lodash/map";
 import utc from "dayjs/plugin/utc";
@@ -13,6 +13,7 @@ import img05 from "@/assets/patterns/img05.jpg";
 import img06 from "@/assets/patterns/img06.jpg";
 import img07 from "@/assets/patterns/img07.jpg";
 import img08 from "@/assets/patterns/img08.jpg";
+import { ISessionConfig } from "@/components/admin/period/modal.period";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -78,10 +79,12 @@ export const PERIOD_STATUS_LIST = [
 ];
 
 export const PERIOD_SESSION_LIST = [
-  { label: "Sáng", value: "MORNING", color: "green" },
-  { label: "Trưa", value: "AFTERNOON", color: "cyan" },
-  { label: "Tối", value: "EVENING", color: "blue" },
-  { label: "Cả ngày", value: "ALL_DAY", color: "volcano" },
+  { label: "Sáng", value: "MORNING", color: "#52c41a" },
+  { label: "Trưa", value: "NOON", color: "#faad14" },
+  { label: "Chiều", value: "AFTERNOON", color: "#1890ff" },
+  { label: "Tối", value: "EVENING", color: "#f00ac9" },
+  { label: "Cả ngày", value: "ALL_DAY", color: "#0af0e0" },
+  { label: "Thêm", value: "EXTRA", color: "#722ed1" },
 ];
 
 export const PERIOD_DAY_OF_WEEK_LIST = [
@@ -184,34 +187,6 @@ export const groupByPermission = (
   });
 };
 
-export function calcMaxSlots(
-  dateRange: any,
-  allowedSessions: any = [],
-  excludedDaysOfWeek: {
-    label: string;
-    value: string;
-  }[] = [],
-  peoplePerSession: any
-) {
-  const start = dayjs(dateRange[0]).startOf("day");
-  const end = dayjs(dateRange[1]).startOf("day");
-  const excludedDay = (excludedDaysOfWeek || []).map((s) => s.value);
-  const sessions = Array.isArray(allowedSessions) ? allowedSessions : [];
-
-  let current = start.clone();
-  let validDays = 0;
-
-  while (current.isSame(end) || current.isBefore(end)) {
-    const dayOfWeek = current.day();
-    if (!excludedDay.includes(dayOfWeek.toString())) {
-      validDays++;
-    }
-    current = current.add(1, "day");
-  }
-
-  return validDays * sessions.length * (peoplePerSession || 0);
-}
-
 export const PATTERN_IMAGES_LIST = [
   img01,
   img02,
@@ -222,3 +197,99 @@ export const PATTERN_IMAGES_LIST = [
   img07,
   img08,
 ];
+
+export const getValidDatesInRange = (
+  startDate: string,
+  endDate: string,
+  excludedDaysOfWeek: number[] = []
+): string[] => {
+  const start = dayjs(startDate, "DD-MM-yyyy");
+  const end = dayjs(endDate, "DD-MM-yyyy");
+  const validDates: string[] = [];
+  console.log(start, end);
+
+  let currentDate = start;
+
+  while (currentDate.isBefore(end) || currentDate.isSame(end, "day")) {
+    const dayOfWeek = currentDate.day(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+
+    if (!excludedDaysOfWeek.includes(dayOfWeek)) {
+      validDates.push(currentDate.format("DD-MM-YYYY"));
+    }
+
+    currentDate = currentDate.add(1, "day");
+  }
+
+  return validDates;
+};
+
+export const groupSessionsBySessionTime = (periodData: IListSessions) => {
+  const sessionConfigs: { [key: string]: ISessionConfig } = {};
+
+  // Khởi tạo tất cả sessions với cấu trúc mới
+  PERIOD_SESSION_LIST.forEach((session) => {
+    sessionConfigs[session.value] = {
+      sessionTime: session.value,
+      activities: [
+        {
+          id: `${session.value}_0`,
+          activity: "",
+          totalSlot: 0,
+        },
+      ],
+      enabled: false,
+    };
+  });
+
+  // Lấy ngày đầu tiên để tránh trùng dữ liệu
+  const firstDate =
+    periodData.sessions.length > 0
+      ? periodData.sessions[0].registrationDate
+      : null;
+
+  // Lọc sessions chỉ lấy từ ngày đầu tiên
+  const sessionsFromFirstDate = periodData.sessions.filter(
+    (session) => session.registrationDate === firstDate
+  );
+
+  // Group sessions theo sessionTime từ ngày đầu tiên
+  const groupedBySessionTime = sessionsFromFirstDate.reduce((acc, session) => {
+    const sessionTime = session.sessionTime;
+    if (!acc[sessionTime]) {
+      acc[sessionTime] = [];
+    }
+    acc[sessionTime].push(session);
+    return acc;
+  }, {} as { [key: string]: ISession[] });
+
+  // Với mỗi sessionTime, chuyển đổi từng session thành activity
+  Object.keys(groupedBySessionTime).forEach((sessionTime) => {
+    const sessionsOfType = groupedBySessionTime[sessionTime];
+
+    if (sessionConfigs[sessionTime]) {
+      // Chuyển đổi mỗi session thành một activity
+      const activities = sessionsOfType.map((session, index) => ({
+        id: `${sessionTime}_${index}`,
+        activity: session.activity || "",
+        totalSlot: session.totalSlot || 0,
+      }));
+
+      sessionConfigs[sessionTime] = {
+        sessionTime: sessionTime,
+        activities:
+          activities.length > 0
+            ? activities
+            : [
+                {
+                  id: `${sessionTime}_0`,
+                  activity: "",
+                  totalSlot: 0,
+                },
+              ],
+        enabled: true,
+      };
+    }
+  });
+
+  return sessionConfigs;
+};

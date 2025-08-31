@@ -12,7 +12,7 @@ import queryString from 'query-string';
 import Access from "@/components/share/access";
 import { ALL_PERMISSIONS } from "@/config/permissions";
 import { sfGe, sfLe, sfLike } from "spring-filter-query-builder";
-import { dateRangeValidate, FORMATE_DATE_TIME_VN, FORMATE_DATE_VN, PERIOD_SESSION_LIST, PERIOD_STATUS_LIST, PERIOD_TYPE_LIST } from "@/config/utils";
+import { dateRangeValidate, FORMATE_DATE_TIME_VN, PERIOD_SESSION_LIST, PERIOD_STATUS_LIST, PERIOD_TYPE_LIST } from "@/config/utils";
 import ModalPeriod from "@/components/admin/period/modal.period";
 import ViewDetailPeriod from "@/components/admin/period/view.period";
 
@@ -85,22 +85,6 @@ const PeriodPage = () => {
                 );
             },
             onFilter: (value, record) => record.status === value,
-        },
-
-        {
-            title: 'Số slot tối đa',
-            dataIndex: 'maxSlots',
-            hideInSearch: true,
-            align: "center",
-            width: 70,
-        },
-
-        {
-            title: 'Số người trên buổi',
-            dataIndex: 'peoplePerSession',
-            hideInSearch: true,
-            width: 90,
-            align: "center"
         },
 
         {
@@ -253,6 +237,13 @@ const PeriodPage = () => {
         },
 
         {
+            title: 'Ghi chú',
+            dataIndex: 'notes',
+            width: 200,
+            hideInSearch: true,
+        },
+
+        {
 
             title: 'Actions',
             hideInSearch: true,
@@ -276,7 +267,7 @@ const PeriodPage = () => {
                         />
                     </Access >
                     <Access
-                        permission={ALL_PERMISSIONS.COMPANIES.DELETE}
+                        permission={ALL_PERMISSIONS.PERIODS.DELETE}
                         hideChildren
                     >
                         <Popconfirm
@@ -357,7 +348,7 @@ const PeriodPage = () => {
     return (
         <div>
             <Access
-                permission={ALL_PERMISSIONS.COMPANIES.GET_PAGINATE}
+                permission={ALL_PERMISSIONS.PERIODS.GET_PAGINATE}
             >
                 <DataTable<IPeriod>
                     actionRef={tableRef}
@@ -384,7 +375,7 @@ const PeriodPage = () => {
                     toolBarRender={(_action, _rows): any => {
                         return (
                             <Access
-                                permission={ALL_PERMISSIONS.COMPANIES.CREATE}
+                                permission={ALL_PERMISSIONS.PERIODS.CREATE}
                                 hideChildren
                             >
                                 <Button
@@ -402,15 +393,11 @@ const PeriodPage = () => {
                         persistenceKey: 'period-table',
                         persistenceType: 'localStorage',
                         defaultValue: { // hide in table, show in setting
-                            // registrationEndTime: { show: false },
-                            // registrationStartTime: { show: false },
-                            peoplePerSession: { show: false },
                             excludedDaysOfWeek: { show: false },
-                            maxSlots: { show: false },
+                            allowedSessions: { show: false },
                             createdAt: { show: false },
                             updatedAt: { show: false },
-                            allowedSessions: { show: false },
-
+                            notes: { show: false },
                         },
                     }}
                 />

@@ -13,8 +13,8 @@ import {
   ISubscribers,
   IResponseImport,
   IPeriod,
-  IListSlots,
-  ISlot,
+  ISession,
+  IListSessions,
 } from "@/types/backend";
 import axios from "config/axios-customize";
 
@@ -99,12 +99,20 @@ export const callFetchPeriod = (query: string) => {
   );
 };
 
+export const callFetchOpenPeriod = (query: string) => {
+  return axios.get<IBackendRes<IModelPaginate<IPeriod>>>(
+    `/api/v1/open-periods?${query}`
+  );
+};
+
 export const callFetchPeriodById = (id: string) => {
   return axios.get<IBackendRes<IPeriod>>(`/api/v1/periods/${id}`);
 };
 
-export const callFetchSlotsByPeriod = (id: string) => {
-  return axios.get<IBackendRes<IListSlots>>(`/api/v1/periods/${id}/slots`);
+export const callFetchSessionsByPeriod = (id: string) => {
+  return axios.get<IBackendRes<IListSessions>>(
+    `/api/v1/periods/${id}/sessions`
+  );
 };
 
 /**
@@ -112,8 +120,12 @@ export const callFetchSlotsByPeriod = (id: string) => {
 Module Slot
  */
 
-export const callRegistrationSlot = (id: string) => {
-  return axios.put<IBackendRes<ISlot>>(`/api/v1/slots`, { id: id });
+export const callCreateSession = (session: ISession) => {
+  return axios.post<IBackendRes<ISession>>(`/api/v1/sessions`, { ...session });
+};
+
+export const callRegisterSession = (id: string) => {
+  return axios.put<IBackendRes<ISession>>(`/api/v1/sessions`, { id: id });
 };
 
 /**

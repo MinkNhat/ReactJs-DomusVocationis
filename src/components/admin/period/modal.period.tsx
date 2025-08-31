@@ -1,13 +1,13 @@
 import { ModalForm, ProFormDateRangePicker, ProFormDateTimeRangePicker, ProFormDependency, ProFormDigit, ProFormRadio, ProFormSelect, ProFormText } from "@ant-design/pro-components";
-import { App, Col, Form, Row } from "antd";
+import { App, Button, Card, Col, Divider, Form, Input, InputNumber, Row, Space, Switch, Typography } from "antd";
+import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { isMobile } from 'react-device-detect';
-import { callCreatePeriod, callUpdatePeriod } from "@/config/api";
-import { IPeriod } from "@/types/backend";
-import { calcMaxSlots, convertToUTC, FORMATE_DATE_TIME_UTC, FORMATE_DATE_TIME_VN, FORMATE_DATE_VN, PERIOD_DAY_OF_WEEK_LIST, PERIOD_SESSION_LIST, PERIOD_STATUS_LIST, PERIOD_TYPE_LIST } from "@/config/utils";
+import { callCreatePeriod, callCreateSession, callFetchSessionsByPeriod, callUpdatePeriod } from "@/config/api";
+import { IPeriod, ISession } from "@/types/backend";
+import { convertToUTC, FORMATE_DATE_TIME_VN, FORMATE_DATE_VN, getValidDatesInRange, groupSessionsBySessionTime, PERIOD_DAY_OF_WEEK_LIST, PERIOD_SESSION_LIST, PERIOD_STATUS_LIST, PERIOD_TYPE_LIST } from "@/config/utils";
 import dayjs, { Dayjs } from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
-import { now } from "lodash";
 import { useEffect, useState } from "react";
 
 dayjs.extend(utc);
@@ -26,23 +26,54 @@ type TSelect = {
     value: string;
 }
 
+export interface IActivity {
+    id: string;
+    activity: string;
+    totalSlot: number;
+}
+
+export interface ISessionConfig {
+    sessionTime: string;
+    activities: IActivity[];
+    enabled: boolean;
+}
+
 const ModalPeriod = (props: IProps) => {
     const { openModal, setOpenModal, reloadTable, dataInit, setDataInit } = props;
     const [isStartDateDisabled, setIsStartDateDisabled] = useState(false);
     const [isEndDateDisabled, setIsEndDateDisabled] = useState(false);
+    const [sessionConfigs, setSessionConfigs] = useState<{ [key: string]: ISessionConfig }>({});
     const { notification, message } = App.useApp();
     const [form] = Form.useForm();
 
     useEffect(() => {
-        // reset disable date select
-        setIsStartDateDisabled(false);
-        setIsEndDateDisabled(false);
-    }, [dataInit])
+        if (dataInit?.id) {
+            callFetchSessionsByPeriod(dataInit.id).then(periodData => {
+                if (periodData.data) {
+                    const res = groupSessionsBySessionTime(periodData.data as any);
+                    setSessionConfigs(res);
+                }
+            });
+        } else {
+            const initialConfigs: { [key: string]: ISessionConfig } = {};
+            PERIOD_SESSION_LIST.forEach(session => {
+                initialConfigs[session.value] = {
+                    sessionTime: session.value,
+                    activities: [{
+                        id: `${session.value}_0`,
+                        activity: '',
+                        totalSlot: 0
+                    }],
+                    enabled: false
+                };
+            });
+            setSessionConfigs(initialConfigs);
+        }
+    }, [dataInit]);
 
     const initialValues = dataInit?.id
         ? {
             ...dataInit,
-
             dateRange: [
                 dataInit.startDate ? dayjs(dataInit.startDate, FORMATE_DATE_VN) : null,
                 dataInit.endDate ? dayjs(dataInit.endDate, FORMATE_DATE_VN) : null,
@@ -51,26 +82,41 @@ const ModalPeriod = (props: IProps) => {
                 dataInit.registrationStartTime ? dayjs(dataInit.registrationStartTime) : null,
                 dataInit.registrationEndTime ? dayjs(dataInit.registrationEndTime) : null,
             ],
-
-            allowedSessions: dataInit.allowedSessions?.map((s) => ({
-                label: PERIOD_SESSION_LIST.find((item) => item.value === s)?.label || s,
-                value: s,
-            })),
-
             excludedDaysOfWeek: dataInit.excludedDaysOfWeek?.map((d) => ({
                 label: PERIOD_DAY_OF_WEEK_LIST.find((item) => item.value === String(d))?.label || d,
                 value: String(d),
             })),
-
-            maxSlots: dataInit.maxSlots,
         }
         : {};
 
     const submitPeriod = async (valuesForm: any) => {
-        const { name, status, maxSlots, type, peoplePerSession, dateRange: [startDate, endDate] } = valuesForm;
-        let { excludedDaysOfWeek, allowedSessions, regisDateRange: [registrationStartTime, registrationEndTime] } = valuesForm;
+        const { name, status, type, notes, dateRange: [startDate, endDate] } = valuesForm;
+        let { excludedDaysOfWeek, regisDateRange: [registrationStartTime, registrationEndTime] } = valuesForm;
 
-        allowedSessions = allowedSessions.map((s: TSelect) => s.value);
+        const allowedSessions = Object.keys(sessionConfigs).filter(key => sessionConfigs[key].enabled);
+        if (allowedSessions.length === 0) {
+            notification.error({
+                message: 'Có lỗi xảy ra',
+                description: 'Vui lòng chọn ít nhất một buổi'
+            });
+            return;
+        }
+
+        const hasValidActivities = allowedSessions.every(sessionKey => {
+            const session = sessionConfigs[sessionKey];
+            return session.activities.some(activity =>
+                activity.activity.trim() !== '' && activity.totalSlot > 0
+            );
+        });
+
+        if (!hasValidActivities) {
+            notification.error({
+                message: 'Có lỗi xảy ra',
+                description: 'Vui lòng nhập đầy đủ thông tin hoạt động và số lượng cho các buổi đã chọn'
+            });
+            return;
+        }
+
         if (excludedDaysOfWeek != null)
             excludedDaysOfWeek = excludedDaysOfWeek.map((s: TSelect) => Number(s.value));
 
@@ -80,9 +126,8 @@ const ModalPeriod = (props: IProps) => {
         if (dataInit?.id) {
             //update
             const period = {
-                id: dataInit.id, name, status, maxSlots, type, startDate, endDate,
-                registrationStartTime, registrationEndTime,
-                peoplePerSession, excludedDaysOfWeek, allowedSessions
+                id: dataInit.id, name, status, type, startDate, endDate, notes,
+                registrationStartTime, registrationEndTime, excludedDaysOfWeek, allowedSessions
             }
 
             const res = await callUpdatePeriod(period);
@@ -99,32 +144,263 @@ const ModalPeriod = (props: IProps) => {
         } else {
             //create
             const period = {
-                name, status, maxSlots, type, startDate, endDate,
-                registrationStartTime, registrationEndTime,
-                peoplePerSession, excludedDaysOfWeek, allowedSessions
+                name, status, type, startDate, endDate, notes,
+                registrationStartTime, registrationEndTime, excludedDaysOfWeek, allowedSessions
             }
 
-            const res = await callCreatePeriod(period);
-            if (res.data) {
-                message.success("Thêm mới phiên thành công");
-                handleReset();
-                reloadTable();
-            } else {
-                const descriptionText = typeof res.message === 'object' ? Object.values(res.message).join(", ") : res.message;
+            try {
+                const res = await callCreatePeriod(period);
+                if (res.data && res.data.id) {
+                    const periodId = res.data.id;
+                    const validDates = getValidDatesInRange(startDate, endDate, excludedDaysOfWeek);
+                    console.log(validDates)
+                    const sessionPromises: Promise<any>[] = [];
 
+                    validDates.forEach(date => {
+                        allowedSessions.forEach(sessionTime => {
+                            const sessionConfig = sessionConfigs[sessionTime];
+
+                            sessionConfig.activities.forEach(activity => {
+                                if (activity.activity.trim() !== '' && activity.totalSlot > 0) {
+                                    const sessionData: ISession = {
+                                        registrationDate: date,
+                                        totalSlot: activity.totalSlot,
+                                        activity: activity.activity,
+                                        sessionTime: sessionTime,
+                                        period: {
+                                            id: periodId
+                                        }
+                                    };
+                                    sessionPromises.push(callCreateSession(sessionData));
+                                }
+                            });
+                        });
+                    });
+
+                    await Promise.allSettled(sessionPromises);
+                    message.success(`Tạo phiên thành công`);
+
+                    handleReset();
+                    reloadTable();
+                } else {
+                    const descriptionText = typeof res.message === 'object' ? Object.values(res.message).join(", ") : res.message;
+                    notification.error({
+                        message: 'Có lỗi xảy ra',
+                        description: descriptionText || 'Vui lòng kiểm tra lại thông tin'
+                    });
+                }
+            } catch (error) {
                 notification.error({
                     message: 'Có lỗi xảy ra',
-                    description: descriptionText || 'Vui lòng kiểm tra lại thông tin'
+                    description: 'Không thể tạo phiên. Vui lòng thử lại.'
                 });
             }
         }
     }
 
+    const handleSessionToggle = (sessionKey: string, enabled: boolean) => {
+        setSessionConfigs(prev => ({
+            ...prev,
+            [sessionKey]: {
+                ...prev[sessionKey],
+                enabled
+            }
+        }));
+    };
+
+    const handleActivityChange = (sessionKey: string, activityId: string, field: keyof IActivity, value: any) => {
+        setSessionConfigs(prev => ({
+            ...prev,
+            [sessionKey]: {
+                ...prev[sessionKey],
+                activities: prev[sessionKey].activities.map(activity =>
+                    activity.id === activityId ? { ...activity, [field]: value } : activity
+                )
+            }
+        }));
+    };
+
+    const addActivity = (sessionKey: string) => {
+        const newActivityId = `${sessionKey}_${Date.now()}`;
+        setSessionConfigs(prev => ({
+            ...prev,
+            [sessionKey]: {
+                ...prev[sessionKey],
+                activities: [
+                    ...prev[sessionKey].activities,
+                    {
+                        id: newActivityId,
+                        activity: '',
+                        totalSlot: 0
+                    }
+                ]
+            }
+        }));
+    };
+
+    const removeActivity = (sessionKey: string, activityId: string) => {
+        setSessionConfigs(prev => ({
+            ...prev,
+            [sessionKey]: {
+                ...prev[sessionKey],
+                activities: prev[sessionKey].activities.filter(activity => activity.id !== activityId)
+            }
+        }));
+    };
+
     const handleReset = async () => {
         form.resetFields();
         setDataInit(null);
         setOpenModal(false);
+
+        setIsStartDateDisabled(false);
+        setIsEndDateDisabled(false);
+
+        const resetConfigs: { [value: string]: ISessionConfig } = {};
+        PERIOD_SESSION_LIST.forEach(session => {
+            resetConfigs[session.value] = {
+                sessionTime: session.value,
+                activities: [{
+                    id: `${session.value}_0`,
+                    activity: '',
+                    totalSlot: 0
+                }],
+                enabled: false
+            };
+        });
+        setSessionConfigs(resetConfigs);
     }
+
+    const renderSessionCards = () => {
+        return (
+            <div style={{ marginBottom: 24 }}>
+                <Typography.Title level={5} style={{ marginBottom: 16 }}>
+                    Chọn các buổi thực hiện
+                </Typography.Title>
+
+                <div style={{
+                    overflowX: 'auto',
+                    padding: '8px 0',
+                    marginBottom: 16
+                }}>
+                    <div style={{
+                        display: 'flex',
+                        gap: 16,
+                        minWidth: 'max-content',
+                        paddingBottom: 8
+                    }}>
+                        {PERIOD_SESSION_LIST.map(session => (
+                            <div key={session.value} style={{
+                                minWidth: '320px',
+                                maxWidth: '320px',
+                                flexShrink: 0
+                            }}>
+                                <Card
+                                    size="small"
+                                    title={
+                                        <Space>
+                                            <div
+                                                style={{
+                                                    width: 12,
+                                                    height: 12,
+                                                    borderRadius: '50%',
+                                                    backgroundColor: session.color
+                                                }}
+                                            />
+                                            {session.label}
+                                        </Space>
+                                    }
+                                    extra={
+                                        <Switch
+                                            checked={sessionConfigs[session.value]?.enabled || false}
+                                            onChange={(checked) => handleSessionToggle(session.value, checked)}
+                                            disabled={dataInit?.id ? true : false}
+                                            size="small"
+                                        />
+                                    }
+                                    style={{
+                                        opacity: sessionConfigs[session.value]?.enabled ? 1 : 0.5,
+                                        border: sessionConfigs[session.value]?.enabled ? `1px solid ${session.color}` : undefined,
+                                        height: '100%'
+                                    }}
+                                >
+                                    <div style={{ maxHeight: '280px', overflowY: 'auto' }}>
+                                        {sessionConfigs[session.value]?.activities?.map((activity, index) => (
+                                            <div key={activity.id} style={{
+                                                marginBottom: 12,
+                                                padding: 8,
+                                                border: '1px solid #f0f0f0',
+                                                borderRadius: 4,
+                                                backgroundColor: '#fafafa'
+                                            }}>
+                                                <div style={{ marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                    <Typography.Text strong style={{ fontSize: 12 }}>
+                                                        Công việc {index + 1}
+                                                    </Typography.Text>
+                                                    {sessionConfigs[session.value]?.activities.length > 1 && (
+                                                        <Button
+                                                            type="text"
+                                                            danger
+                                                            size="small"
+                                                            icon={<DeleteOutlined />}
+                                                            onClick={() => removeActivity(session.value, activity.id)}
+                                                            disabled={!sessionConfigs[session.value]?.enabled || (dataInit?.id ? true : false)}
+                                                            style={{ padding: '2px 4px' }}
+                                                        />
+                                                    )}
+                                                </div>
+
+                                                <div style={{ marginBottom: 8 }}>
+                                                    <Typography.Text style={{ fontSize: 11 }}>
+                                                        Tên công việc:
+                                                    </Typography.Text>
+                                                    <Input
+                                                        placeholder="Nhập tên công việc"
+                                                        value={activity.activity}
+                                                        onChange={(e) => handleActivityChange(session.value, activity.id, 'activity', e.target.value)}
+                                                        disabled={!sessionConfigs[session.value]?.enabled || (dataInit?.id ? true : false)}
+                                                        size="small"
+                                                        style={{ marginTop: 2 }}
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <Typography.Text style={{ fontSize: 11 }}>
+                                                        Số lượng:
+                                                    </Typography.Text>
+                                                    <InputNumber
+                                                        placeholder="Nhập số lượng"
+                                                        value={activity.totalSlot}
+                                                        onChange={(value) => handleActivityChange(session.value, activity.id, 'totalSlot', value || 0)}
+                                                        disabled={!sessionConfigs[session.value]?.enabled || (dataInit?.id ? true : false)}
+                                                        min={0}
+                                                        style={{ width: '100%', marginTop: 2 }}
+                                                        size="small"
+                                                    />
+                                                </div>
+                                            </div>
+                                        ))}
+
+                                        {sessionConfigs[session.value]?.enabled && !dataInit?.id && (
+                                            <Button
+                                                type="dashed"
+                                                onClick={() => addActivity(session.value)}
+                                                icon={<PlusOutlined />}
+                                                size="small"
+                                                style={{ width: '100%', marginTop: 8 }}
+                                            >
+                                                Thêm hoạt động
+                                            </Button>
+                                        )}
+                                    </div>
+                                </Card>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        );
+    };
 
     return (
         <>
@@ -135,12 +411,13 @@ const ModalPeriod = (props: IProps) => {
                     onCancel: () => handleReset(),
                     afterClose: () => handleReset(),
                     destroyOnClose: true,
-                    width: isMobile ? "100%" : 1000,
+                    width: isMobile ? "100%" : 1200,
                     keyboard: false,
                     maskClosable: true,
                     footer: null,
                     okText: <>{dataInit?.id ? "Cập nhật" : "Tạo mới"}</>,
                     cancelText: "Hủy",
+                    style: { top: '3vh' }
                 }}
                 scrollToFirstError={true}
                 preserve={false}
@@ -149,7 +426,7 @@ const ModalPeriod = (props: IProps) => {
                 initialValues={initialValues}
             >
                 <Row gutter={24}>
-                    <Col lg={16} md={16} sm={24} xs={24}>
+                    <Col lg={12} md={12} sm={24} xs={24}>
                         <ProFormText
                             label="Tên phiên"
                             name="name"
@@ -157,7 +434,21 @@ const ModalPeriod = (props: IProps) => {
                         />
                     </Col>
 
-                    <Col lg={8} md={8} sm={24} xs={24}>
+                    <Col lg={6} md={6} sm={24} xs={24}>
+                        <ProFormSelect
+                            label="Phân loại"
+                            name="type"
+                            rules={[{ required: true, message: 'Vui lòng không bỏ trống' }]}
+                            placeholder="Chọn loại phiên"
+                            request={async () => PERIOD_TYPE_LIST.map(t => ({
+                                label: t.label,
+                                value: t.value,
+                            }))}
+                            disabled={dataInit?.id ? true : false}
+                        />
+                    </Col>
+
+                    <Col lg={6} md={6} sm={24} xs={24}>
                         <ProFormRadio.Group
                             label="Trạng thái"
                             name="status"
@@ -195,6 +486,25 @@ const ModalPeriod = (props: IProps) => {
                     </Col>
 
                     <Col lg={12} md={12} sm={24} xs={24}>
+                        <ProFormSelect.SearchSelect
+                            label="Thứ bị loại bỏ trong tuần"
+                            name="excludedDaysOfWeek"
+                            placeholder="Chọn những thứ bị loại bỏ trong tuần"
+                            mode="multiple"
+                            options={PERIOD_DAY_OF_WEEK_LIST}
+                            disabled={dataInit?.id ? true : false}
+                        />
+                    </Col>
+
+                    <Col lg={11} md={11} sm={24} xs={24}>
+                        <ProFormText
+                            label="Ghi chú"
+                            name="notes"
+                            placeholder="Nhập ghi chú"
+                        />
+                    </Col>
+
+                    <Col lg={12} md={12} sm={24} xs={24}>
                         <ProFormDateTimeRangePicker
                             label="Thời gian đăng ký"
                             name="regisDateRange"
@@ -223,90 +533,11 @@ const ModalPeriod = (props: IProps) => {
                             disabled={dataInit?.id ? true : false}
                         />
                     </Col>
-
-                    <Col lg={12} md={12} sm={24} xs={24}>
-                        <ProFormSelect.SearchSelect
-                            label="Buổi được phép đăng ký"
-                            name="allowedSessions"
-                            placeholder="Chọn những buổi được phép đăng ký"
-                            rules={[{ required: true, message: 'Vui lòng không bỏ trống' }]}
-                            mode="multiple"
-                            options={PERIOD_SESSION_LIST.map(s => ({
-                                label: s.label,
-                                value: s.value,
-                            }))}
-                            disabled={dataInit?.id ? true : false}
-                        />
-                    </Col>
-
-                    <Col lg={12} md={12} sm={24} xs={24}>
-                        <ProFormSelect.SearchSelect
-                            label="Thứ bị loại bỏ trong tuần"
-                            name="excludedDaysOfWeek"
-                            placeholder="Chọn những thứ bị loại bỏ trong tuần"
-                            mode="multiple"
-                            options={PERIOD_DAY_OF_WEEK_LIST}
-                            disabled={dataInit?.id ? true : false}
-                        />
-                    </Col>
-
-                    <Col lg={8} md={8} sm={24} xs={24}>
-                        <ProFormSelect
-                            label="Phân loại"
-                            name="type"
-                            rules={[{ required: true, message: 'Vui lòng không bỏ trống' }]}
-                            placeholder="Chọn loại phiên"
-                            request={async () => PERIOD_TYPE_LIST.map(t => ({
-                                label: t.label,
-                                value: t.value,
-                            }))}
-                            disabled={dataInit?.id ? true : false}
-                        />
-                    </Col>
-
-                    <Col lg={8} md={8} sm={24} xs={24}>
-                        <ProFormDependency name={['dateRange', 'allowedSessions']}>
-                            {({ dateRange, allowedSessions }) => (
-                                <ProFormDigit
-                                    label="Số người / buổi"
-                                    name="peoplePerSession"
-                                    placeholder="Nhập số người / buổi ( tối đa 50 người )"
-                                    rules={[{ required: true, message: 'Vui lòng không bỏ trống' }]}
-                                    min={1}
-                                    max={50}
-                                    disabled={!(dateRange && Array.isArray(allowedSessions) && allowedSessions.length > 0) || !!dataInit?.id}
-                                    fieldProps={{
-                                        precision: 0,
-                                        onChange: (value) => {
-                                            if (value) {
-                                                form.setFieldsValue({
-                                                    maxSlots: calcMaxSlots(form.getFieldValue('dateRange'), form.getFieldValue('allowedSessions'), form.getFieldValue('excludedDaysOfWeek'), value)
-                                                });
-                                            }
-                                        },
-                                    }}
-                                />
-                            )}
-                        </ProFormDependency>
-
-                    </Col>
-
-                    <Col lg={8} md={8} sm={24} xs={24}>
-                        {/* re-render mỗi khi peoplePerSession thay đổi */}
-                        <ProFormDependency name={['peoplePerSession']}>
-                            {({ peoplePerSession }) => (
-                                <ProFormDigit
-                                    label="Slot tối đa"
-                                    name="maxSlots"
-                                    placeholder="Nhập số slot tối đa"
-                                    min={1}
-                                    fieldProps={{ precision: 0 }}
-                                    disabled={!peoplePerSession || !!dataInit?.id}
-                                />
-                            )}
-                        </ProFormDependency>
-                    </Col>
                 </Row>
+
+                <Divider />
+
+                {renderSessionCards()}
             </ModalForm>
         </>
     )

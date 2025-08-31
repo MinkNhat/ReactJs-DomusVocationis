@@ -12,21 +12,21 @@ const RegisterPage = () => {
     const [isSubmit, setIsSubmit] = useState(false);
 
     const onFinish = async (values: IUser) => {
-        const { name, email, password, age, gender, address } = values;
-        setIsSubmit(true);
-        const res = await callRegister(name, email, password as string, +age, gender, address);
-        setIsSubmit(false);
-        if (res?.data?.id) {
-            message.success('Đăng ký tài khoản thành công!');
-            navigate('/login')
-        } else {
-            notification.error({
-                message: "Có lỗi xảy ra",
-                description:
-                    res.message && Array.isArray(res.message) ? res.message[0] : res.message,
-                duration: 5
-            })
-        }
+        // const { full_name, email, password, gender, address } = values;
+        // setIsSubmit(true);
+        // const res = await callRegister(name, email, password as string, gender, address);
+        // setIsSubmit(false);
+        // if (res?.data?.id) {
+        //     message.success('Đăng ký tài khoản thành công!');
+        //     navigate('/login')
+        // } else {
+        //     notification.error({
+        //         message: "Có lỗi xảy ra",
+        //         description:
+        //             res.message && Array.isArray(res.message) ? res.message[0] : res.message,
+        //         duration: 5
+        //     })
+        // }
     };
 
 

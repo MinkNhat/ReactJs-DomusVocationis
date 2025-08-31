@@ -82,16 +82,16 @@ export interface IPeriod {
   id?: string;
   name: string;
   status: string;
-  maxSlots: number;
   type: string;
   startDate: Date;
   endDate: Date;
   registrationStartTime: Date;
   registrationEndTime: Date;
-  peoplePerSession?: number;
+  notes?: string;
   excludedDaysOfWeek?: number[];
   allowedSessions?: string[];
   currentUsers?: number;
+  totalSlot?: number;
 
   createdBy?: string;
   isDeleted?: boolean;
@@ -100,16 +100,16 @@ export interface IPeriod {
   updatedAt?: string;
 }
 
-export interface ISlot {
-  id: string;
-  registrationDate?: Date;
+export interface ISession {
+  id?: string;
+  registrationDate?: Date | string;
   sessionTime?: string;
+  activity?: string;
+  totalSlot?: number;
   period?: {
     id: string;
-    name: string;
-    status: string;
-    peoplePerSession: number;
-    allowedSessions: string[];
+    name?: string;
+    status?: string;
   };
   createdAt?: Date;
   updatedAt?: Date;
@@ -121,12 +121,15 @@ export interface ISlot {
   availableSlots?: number;
 }
 
-export interface IListSlots {
+export interface IListSessions {
   id: string;
-  slots: {
+  sessions: {
     id: string;
     registrationDate: Date;
     sessionTime: string;
+    activity: string;
+    totalSlot: number;
+    currentRegistrations: number;
     users: {
       id: string;
       full_name: string;
