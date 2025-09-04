@@ -269,3 +269,41 @@ export interface ISubscribers {
   createdAt?: string;
   updatedAt?: string;
 }
+
+export interface ICategory {
+  id?: string;
+  name: string;
+  description?: string;
+  active: boolean;
+  allowPost: boolean;
+  createdBy?: string;
+  isDeleted?: boolean;
+  deletedAt?: boolean | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface IPost {
+  id?: string;
+  title: string;
+  content: string;
+  type: string;
+  status: string;
+  expiresAt?: string;
+  publicPost: boolean;
+  user?: {
+    id: string;
+    full_name: string;
+    avatar: string;
+  };
+  category: {
+    id: string;
+    name?: string;
+  };
+
+  createdBy?: string;
+  isDeleted?: boolean;
+  deletedAt?: boolean | null;
+  createdAt?: string;
+  updatedAt?: string;
+}

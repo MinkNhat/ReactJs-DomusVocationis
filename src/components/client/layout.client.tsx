@@ -1,24 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
     AppstoreOutlined,
-    ExceptionOutlined,
-    ApiOutlined,
-    UserOutlined,
-    BankOutlined,
     MenuFoldOutlined,
     MenuUnfoldOutlined,
-    AliwangwangOutlined,
-    BugOutlined,
-    ScheduleOutlined,
-    CalendarOutlined,
-    VideoCameraOutlined,
-    UploadOutlined,
     ContactsOutlined,
     FireOutlined,
     LogoutOutlined,
     HomeFilled,
     HeartTwoTone,
-    InfoCircleFilled,
     InfoCircleOutlined,
 } from '@ant-design/icons';
 import { Layout, Menu, Dropdown, Space, message, Avatar, Button, theme } from 'antd';
@@ -29,12 +18,9 @@ import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { isMobile } from 'react-device-detect';
 import type { MenuProps } from 'antd';
 import { setLogoutAction } from '@/redux/slice/accountSlide';
-import { ALL_PERMISSIONS } from '@/config/permissions';
 import styles from '@/styles/client.module.scss';
 
 const { Sider, Content, Footer } = Layout;
-
-// const { Content, Sider } = Layout;
 
 const LayoutClient = () => {
     const location = useLocation();
@@ -93,6 +79,8 @@ const LayoutClient = () => {
     ];
 
     useEffect(() => {
+        const ACL_ENABLE = import.meta.env.VITE_ACL_ENABLE;
+
         const full = [
             {
                 label: <Link to='/'>Dashboard</Link>,
@@ -100,23 +88,23 @@ const LayoutClient = () => {
                 icon: <AppstoreOutlined />
             },
 
-            {
+            ...(isAuthenticated || ACL_ENABLE === 'false' ? [{
                 label: <Link to='/period'>Đăng ký lịch</Link>,
                 key: '/period',
                 icon: <InfoCircleOutlined />
-            },
+            }] : []),
 
-            {
+            ...(isAuthenticated || ACL_ENABLE === 'false' ? [{
                 label: <Link to='/schedule'>Lịch của tôi</Link>,
                 key: '/schedule',
                 icon: <InfoCircleOutlined />
-            },
+            }] : []),
 
-            {
+            ...(isAuthenticated || ACL_ENABLE === 'false' ? [{
                 label: <Link to='/info'>Thông tin cá nhân</Link>,
                 key: '/info',
                 icon: <InfoCircleOutlined />
-            },
+            }] : []),
 
             // ...(viewRole || ACL_ENABLE === 'false' ? [{
             //     label: <Link to='/admin/role'>Role</Link>,
@@ -126,7 +114,7 @@ const LayoutClient = () => {
         ];
 
         setMenuItems(full);
-    }, [])
+    }, [isAuthenticated])
 
     return (
         <>

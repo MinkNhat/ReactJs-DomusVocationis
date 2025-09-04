@@ -1,35 +1,37 @@
-import ModalCompany from "@/components/admin/company/modal.company";
 import DataTable from "@/components/client/data-table";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { fetchCompany } from "@/redux/slice/companySlide";
-import { ICompany } from "@/types/backend";
+import { ICategory } from "@/types/backend";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { ActionType, ProColumns } from '@ant-design/pro-components';
-import { Button, Popconfirm, Space, message, notification } from "antd";
+import { Badge, Button, Popconfirm, Space, Tag, message, notification } from "antd";
 import { useState, useRef } from 'react';
 import dayjs from 'dayjs';
-import { callDeleteCompany } from "@/config/api";
 import queryString from 'query-string';
 import Access from "@/components/share/access";
 import { ALL_PERMISSIONS } from "@/config/permissions";
-import { sfLike } from "spring-filter-query-builder";
+import { sfGe, sfLe, sfLike } from "spring-filter-query-builder";
+import { dateRangeValidate, FORMATE_DATE_TIME_VN, PERIOD_SESSION_LIST, PERIOD_STATUS_LIST, PERIOD_TYPE_LIST } from "@/config/utils";
+import { callDeleteCategory } from "@/config/api";
+import { fetchCategory } from "@/redux/slice/categorySlide";
+import ModalCategory from "@/components/admin/category/modal.category";
 
-const CompanyPage = () => {
+const CategoryPage = () => {
     const [openModal, setOpenModal] = useState<boolean>(false);
-    const [dataInit, setDataInit] = useState<ICompany | null>(null);
+    const [dataInit, setDataInit] = useState<ICategory | null>(null);
+    const [openViewDetail, setOpenViewDetail] = useState(false);
 
     const tableRef = useRef<ActionType>();
 
-    const isFetching = useAppSelector(state => state.company.isFetching);
-    const meta = useAppSelector(state => state.company.meta);
-    const companies = useAppSelector(state => state.company.result);
+    const isFetching = useAppSelector(state => state.category.isFetching);
+    const meta = useAppSelector(state => state.category.meta);
+    const categories = useAppSelector(state => state.category.result);
     const dispatch = useAppDispatch();
 
-    const handleDeleteCompany = async (id: string | undefined) => {
+    const handleDeleteCategory = async (id: string | undefined) => {
         if (id) {
-            const res = await callDeleteCompany(id);
+            const res = await callDeleteCategory(id);
             if (res && +res.statusCode === 200) {
-                message.success('Xóa Company thành công');
+                message.success('Xóa Category thành công');
                 reloadTable();
             } else {
                 notification.error({
@@ -44,7 +46,7 @@ const CompanyPage = () => {
         tableRef?.current?.reload();
     }
 
-    const columns: ProColumns<ICompany>[] = [
+    const columns: ProColumns<ICategory>[] = [
         {
             title: 'STT',
             key: 'index',
@@ -52,47 +54,112 @@ const CompanyPage = () => {
             align: "center",
             render: (text, record, index) => {
                 return (
-                    <>
-                        {(index + 1) + (meta.page - 1) * (meta.pageSize)}
-                    </>)
+                    <a onClick={() => {
+                        setOpenViewDetail(true);
+                        setDataInit(record);
+                    }}>
+                        <Badge color="#c3c3c3" count={(index + 1) + (meta.page - 1) * (meta.pageSize)}></Badge>
+                    </a>)
             },
             hideInSearch: true,
         },
+
         {
-            title: 'Name',
+            title: 'Tên danh mục',
             dataIndex: 'name',
-            sorter: true,
-        },
-        {
-            title: 'Address',
-            dataIndex: 'address',
-            sorter: true,
+            width: 250,
         },
 
         {
-            title: 'CreatedAt',
+            title: 'Mô tả',
+            dataIndex: 'description',
+            hideInSearch: true,
+        },
+
+        {
+            title: 'Trạng thái',
+            dataIndex: 'active',
+            hideInSearch: true,
+            width: 140,
+            render: (text, record, index, action) => {
+                return (
+                    <span>
+                        {record.active ? (
+                            <Tag color="green" >ACTIVE</Tag>
+                        ) : (
+                            <Tag color="red" >INACTIVE</Tag>
+                        )}
+                    </span>
+                )
+            },
+            filters: [
+                {
+                    text: 'Đang hoạt động',
+                    value: true,
+                },
+                {
+                    text: 'Không hoạt động',
+                    value: false,
+                }
+            ],
+            onFilter: (value, record) => record.active === value,
+        },
+
+        {
+            title: 'Cho phép người dùng đăng bài',
+            dataIndex: 'allowPost',
+            hideInSearch: true,
+            width: 180,
+            render: (text, record, index, action) => {
+                return (
+                    <span>
+                        {record.allowPost ? (
+                            <Tag color="green" >ALLOW</Tag>
+                        ) : (
+                            <Tag color="red" >NOT ALLOW</Tag>
+                        )}
+                    </span>
+                )
+            },
+            filters: [
+                {
+                    text: 'Cho phép đăng bài',
+                    value: true,
+                },
+                {
+                    text: 'Không cho phép đăng bài',
+                    value: false,
+                }
+            ],
+            onFilter: (value, record) => record.allowPost === value,
+        },
+
+        {
+            title: 'Ngày tạo',
             dataIndex: 'createdAt',
             width: 200,
             sorter: true,
             render: (text, record, index, action) => {
                 return (
-                    <>{record.createdAt ? dayjs(record.createdAt).format('DD-MM-YYYY HH:mm:ss') : ""}</>
+                    <>{record.createdAt ? dayjs(record.createdAt).format(FORMATE_DATE_TIME_VN) : ""}</>
                 )
             },
             hideInSearch: true,
         },
+
         {
-            title: 'UpdatedAt',
+            title: 'Ngày chỉnh sửa',
             dataIndex: 'updatedAt',
             width: 200,
             sorter: true,
             render: (text, record, index, action) => {
                 return (
-                    <>{record.updatedAt ? dayjs(record.updatedAt).format('DD-MM-YYYY HH:mm:ss') : ""}</>
+                    <>{record.updatedAt ? dayjs(record.updatedAt).format(FORMATE_DATE_TIME_VN) : ""}</>
                 )
             },
             hideInSearch: true,
         },
+
         {
 
             title: 'Actions',
@@ -101,7 +168,7 @@ const CompanyPage = () => {
             render: (_value, entity, _index, _action) => (
                 <Space>
                     < Access
-                        permission={ALL_PERMISSIONS.COMPANIES.UPDATE}
+                        permission={ALL_PERMISSIONS.CATEGORIES.UPDATE}
                         hideChildren
                     >
                         <EditOutlined
@@ -117,14 +184,14 @@ const CompanyPage = () => {
                         />
                     </Access >
                     <Access
-                        permission={ALL_PERMISSIONS.COMPANIES.DELETE}
+                        permission={ALL_PERMISSIONS.CATEGORIES.DELETE}
                         hideChildren
                     >
                         <Popconfirm
                             placement="leftTop"
-                            title={"Xác nhận xóa company"}
-                            description={"Bạn có chắc chắn muốn xóa company này ?"}
-                            onConfirm={() => handleDeleteCompany(entity.id)}
+                            title={"Xác nhận xóa danh mục"}
+                            description={"Bạn có chắc chắn muốn xóa danh mục này ?"}
+                            onConfirm={() => handleDeleteCategory(entity.id)}
                             okText="Xác nhận"
                             cancelText="Hủy"
                         >
@@ -145,33 +212,25 @@ const CompanyPage = () => {
     ];
 
     const buildQuery = (params: any, sort: any, filter: any) => {
-        const clone = { ...params };
         const q: any = {
             page: params.current,
             size: params.pageSize,
-            filter: ""
         }
 
-
-
-        if (clone.name) q.filter = `${sfLike("name", clone.name)}`;
-        if (clone.address) {
-            q.filter = clone.name ?
-                q.filter + " and " + `${sfLike("address", clone.address)}`
-                : `${sfLike("address", clone.address)}`;
+        const filters: string[] = [];
+        if (params.name) {
+            filters.push(`${sfLike("name", params.name)}`);
         }
 
-        if (!q.filter) delete q.filter;
-
+        if (filters.length > 0) {
+            q.filter = filters.join(" and ");
+        } else {
+            delete q.filter;
+        }
         let temp = queryString.stringify(q);
 
+
         let sortBy = "";
-        if (sort && sort.name) {
-            sortBy = sort.name === 'ascend' ? "sort=name,asc" : "sort=name,desc";
-        }
-        if (sort && sort.address) {
-            sortBy = sort.address === 'ascend' ? "sort=address,asc" : "sort=address,desc";
-        }
         if (sort && sort.createdAt) {
             sortBy = sort.createdAt === 'ascend' ? "sort=createdAt,asc" : "sort=createdAt,desc";
         }
@@ -179,12 +238,8 @@ const CompanyPage = () => {
             sortBy = sort.updatedAt === 'ascend' ? "sort=updatedAt,asc" : "sort=updatedAt,desc";
         }
 
-        //mặc định sort theo updatedAt
-        if (Object.keys(sortBy).length === 0) {
-            temp = `${temp}&sort=updatedAt,desc`;
-        } else {
-            temp = `${temp}&${sortBy}`;
-        }
+        //mặc định sort theo createdAt
+        Object.keys(sortBy).length === 0 ? temp = `${temp}&sort=createdAt,desc` : temp = `${temp}&${sortBy}`;
 
         return temp;
     }
@@ -192,18 +247,18 @@ const CompanyPage = () => {
     return (
         <div>
             <Access
-                permission={ALL_PERMISSIONS.COMPANIES.GET_PAGINATE}
+                permission={ALL_PERMISSIONS.CATEGORIES.GET_PAGINATE}
             >
-                <DataTable<ICompany>
+                <DataTable<ICategory>
                     actionRef={tableRef}
                     headerTitle="Danh sách Công Ty"
                     rowKey="id"
                     loading={isFetching}
                     columns={columns}
-                    dataSource={companies}
+                    dataSource={categories}
                     request={async (params, sort, filter): Promise<any> => {
                         const query = buildQuery(params, sort, filter);
-                        dispatch(fetchCompany({ query }))
+                        dispatch(fetchCategory({ query }))
                     }}
                     scroll={{ x: true }}
                     pagination={
@@ -219,7 +274,7 @@ const CompanyPage = () => {
                     toolBarRender={(_action, _rows): any => {
                         return (
                             <Access
-                                permission={ALL_PERMISSIONS.COMPANIES.CREATE}
+                                permission={ALL_PERMISSIONS.CATEGORIES.CREATE}
                                 hideChildren
                             >
                                 <Button
@@ -232,9 +287,19 @@ const CompanyPage = () => {
                             </Access>
                         );
                     }}
+                    options={{ setting: true }}
+                    columnsState={{
+                        persistenceKey: 'category-table',
+                        persistenceType: 'localStorage',
+                        defaultValue: { // hide in table, show in setting
+                            createdAt: { show: false },
+                            updatedAt: { show: false },
+                        },
+                    }}
                 />
             </Access>
-            <ModalCompany
+
+            <ModalCategory
                 openModal={openModal}
                 setOpenModal={setOpenModal}
                 reloadTable={reloadTable}
@@ -245,4 +310,4 @@ const CompanyPage = () => {
     )
 }
 
-export default CompanyPage;
+export default CategoryPage;

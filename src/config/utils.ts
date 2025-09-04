@@ -5,6 +5,7 @@ import groupBy from "lodash/groupBy";
 import map from "lodash/map";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
+import relativeTime from "dayjs/plugin/relativeTime";
 import img01 from "@/assets/patterns/img01.jpg";
 import img02 from "@/assets/patterns/img02.jpg";
 import img03 from "@/assets/patterns/img03.jpg";
@@ -14,9 +15,12 @@ import img06 from "@/assets/patterns/img06.jpg";
 import img07 from "@/assets/patterns/img07.jpg";
 import img08 from "@/assets/patterns/img08.jpg";
 import { ISessionConfig } from "@/components/admin/period/modal.period";
+import "dayjs/locale/vi";
+dayjs.locale("vi");
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
+dayjs.extend(relativeTime);
 
 export const FORMATE_DATE_ENG = "YYYY-MM-DD";
 export const FORMATE_DATE_VN = "DD-MM-YYYY";
@@ -38,6 +42,10 @@ export function convertToUTC(time: string, format: string) {
 
 export function getNowUTC() {
   return dayjs().utc();
+}
+
+export function getRelativeTime(time: any) {
+  return dayjs(time).fromNow();
 }
 
 export const SKILLS_LIST = [
@@ -293,3 +301,13 @@ export const groupSessionsBySessionTime = (periodData: IListSessions) => {
 
   return sessionConfigs;
 };
+
+export const POST_TYPE_LIST = [
+  { label: "Thông báo", value: "ANNOUNCEMENT" },
+  { label: "Khảo sát", value: "SURVEY" },
+];
+
+// export const POST_STATUS_LIST = [
+//   { label: "Thông báo", value: "ANNOUNCEMENT" },
+//   { label: "Khảo sát", value: "SURVEY" },
+// ];

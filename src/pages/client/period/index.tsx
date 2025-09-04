@@ -3,11 +3,11 @@ import { Card, Button, Typography, Space, Tag, Spin, Row, Col, Empty, Tooltip } 
 import { CalendarOutlined, TeamOutlined, DoubleRightOutlined, SwapRightOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import dayjs, { Dayjs } from 'dayjs';
 import { IPeriod } from '@/types/backend';
-import { FORMATE_DATE_TIME_VN, getNowUTC, PATTERN_IMAGES_LIST, PERIOD_TYPE_LIST } from '@/config/utils';
+import { PATTERN_IMAGES_LIST, PERIOD_TYPE_LIST } from '@/config/utils';
 import { useNavigate } from 'react-router-dom';
-import { callFetchOpenPeriod, callFetchPeriod } from '@/config/api';
+import { callFetchOpenPeriod } from '@/config/api';
 import styles from '@/styles/client.module.scss';
-import { sfGe, sfEqual } from "spring-filter-query-builder";
+import { useAppSelector } from '@/redux/hooks';
 
 const { Title, Text } = Typography;
 

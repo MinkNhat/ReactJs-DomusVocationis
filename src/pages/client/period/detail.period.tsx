@@ -10,6 +10,7 @@ import interactionPlugin from '@fullcalendar/interaction';
 import dayjs from 'dayjs';
 import { FORMATE_DATE_VN, PERIOD_SESSION_LIST, PERIOD_STATUS_LIST } from "@/config/utils";
 import RegistrationModal from "./modal.period";
+import NotFound from "@/components/share/not.found";
 
 const { Title, Text } = Typography;
 
@@ -223,6 +224,10 @@ const ClientPeriodDetailPage = (props: any) => {
             }
         }, 100);
     };
+
+    if (!periodDetail) {
+        return <NotFound />
+    }
 
     return (
         <>

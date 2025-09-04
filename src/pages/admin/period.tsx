@@ -251,7 +251,7 @@ const PeriodPage = () => {
             render: (_value, entity, _index, _action) => (
                 <Space>
                     < Access
-                        permission={ALL_PERMISSIONS.COMPANIES.UPDATE}
+                        permission={ALL_PERMISSIONS.PERIODS.UPDATE}
                         hideChildren
                     >
                         <EditOutlined

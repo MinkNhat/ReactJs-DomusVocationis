@@ -15,6 +15,8 @@ import {
   IPeriod,
   ISession,
   IListSessions,
+  ICategory,
+  IPost,
 } from "@/types/backend";
 import axios from "config/axios-customize";
 
@@ -117,7 +119,7 @@ export const callFetchSessionsByPeriod = (id: string) => {
 
 /**
  * 
-Module Slot
+Module Session
  */
 
 export const callCreateSession = (session: ISession) => {
@@ -387,4 +389,60 @@ export const callFetchSubscriber = (query: string) => {
 
 export const callFetchSubscriberById = (id: string) => {
   return axios.get<IBackendRes<ISubscribers>>(`/api/v1/subscribers/${id}`);
+};
+
+/**
+ * 
+Module Category
+ */
+export const callCreateCategory = (category: ICategory) => {
+  return axios.post<IBackendRes<ICategory>>("/api/v1/categories", {
+    ...category,
+  });
+};
+
+export const callUpdateCategory = (category: ICategory) => {
+  return axios.put<IBackendRes<ICategory>>(`/api/v1/categories`, {
+    ...category,
+  });
+};
+
+export const callDeleteCategory = (id: string) => {
+  return axios.delete<IBackendRes<ICategory>>(`/api/v1/categories/${id}`);
+};
+
+export const callFetchCategory = (query: string) => {
+  return axios.get<IBackendRes<IModelPaginate<ICategory>>>(
+    `/api/v1/categories?${query}`
+  );
+};
+
+// export const callFetchCategoryById = (id: string) => {
+//   return axios.get<IBackendRes<ICategory>>(`/api/v1/categories/${id}`);
+// };
+
+/**
+ * 
+Module Post
+ */
+export const callCreatePost = (post: IPost) => {
+  return axios.post<IBackendRes<IPost>>("/api/v1/posts", { ...post });
+};
+
+export const callUpdatePost = (post: IPost) => {
+  return axios.put<IBackendRes<IPost>>(`/api/v1/posts`, { ...post });
+};
+
+export const callDeletePost = (id: string) => {
+  return axios.delete<IBackendRes<IPost>>(`/api/v1/posts/${id}`);
+};
+
+export const callFetchPost = (query: string) => {
+  return axios.get<IBackendRes<IModelPaginate<IPost>>>(
+    `/api/v1/posts?${query}`
+  );
+};
+
+export const callFetchPostById = (id: string) => {
+  return axios.get<IBackendRes<IPost>>(`/api/v1/posts/${id}`);
 };
