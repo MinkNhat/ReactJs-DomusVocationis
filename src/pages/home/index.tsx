@@ -13,7 +13,9 @@ import {
     Spin,
     List,
     Card,
-    Carousel
+    Carousel,
+    Flex,
+    Space
 } from 'antd';
 import {
     PlusOutlined,
@@ -53,9 +55,11 @@ const HomePage = () => {
         initializing: true
     });
     const [openModal, setOpenModal] = useState<boolean>(false);
-    const isAuthenticated = useAppSelector(state => state.account.isAuthenticated);
     const navigate = useNavigate();
     const { id: cateId } = useParams<{ id: string }>();
+    const [postType, setPostType] = useState<"ANNOUNCEMENT" | "SURVEY" | undefined>("ANNOUNCEMENT");
+    const isAuthenticated = useAppSelector(state => state.account.isAuthenticated);
+    const userRole = useAppSelector(state => state.account.user).role?.name;
 
     const carouselImages = [
         {
@@ -199,16 +203,6 @@ const HomePage = () => {
     );
 
     const renderPostList = () => {
-        if (loading.initializing) {
-            return (
-                <Card style={{ height: '100%', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-                    <div style={{ textAlign: 'center', padding: '60px 0' }}>
-                        <Spin size="large" />
-                    </div>
-                </Card>
-            );
-        }
-
         if (!selectedCategory) {
             return (
                 <Card style={{ height: '100%', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
@@ -238,6 +232,16 @@ const HomePage = () => {
                             </div>
                         ))}
                     </Carousel>
+                </Card>
+            );
+        }
+
+        if (loading.initializing) {
+            return (
+                <Card style={{ height: '100%', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+                    <div style={{ textAlign: 'center', padding: '60px 0' }}>
+                        <Spin size="large" />
+                    </div>
                 </Card>
             );
         }
@@ -370,18 +374,41 @@ const HomePage = () => {
                 justifyContent: 'space-between',
                 borderRadius: '3px'
             }}>
-                <Title level={3} style={{ margin: 0, color: '#1890ff' }}>
-                    Diễn đàn trao đổi
-                </Title>
-                {isAuthenticated && (
-                    <Button
-                        type="primary"
-                        icon={<PlusOutlined />}
-                        onClick={() => setOpenModal(true)}
-                    >
-                        Tạo bài viết mới
-                    </Button>
-                )}
+                <Flex align='center' justify='space-between' flex={1}>
+                    <Title level={3} style={{ margin: 0, color: '#1890ff' }}>
+                        Diễn đàn trao đổi
+                    </Title>
+
+                    {isAuthenticated && (
+                        <Space size="large">
+                            {
+                                userRole !== undefined && (
+                                    <Button
+                                        type="primary"
+                                        icon={<PlusOutlined />}
+                                        onClick={() => {
+                                            setOpenModal(true);
+                                            setPostType("SURVEY");
+                                        }}
+                                    >
+                                        Tạo bài khảo sát mới
+                                    </Button>
+                                )
+                            }
+
+                            <Button
+                                type="primary"
+                                icon={<PlusOutlined />}
+                                onClick={() => {
+                                    setOpenModal(true);
+                                    setPostType("ANNOUNCEMENT");
+                                }}
+                            >
+                                Tạo bài viết mới
+                            </Button>
+                        </Space>
+                    )}
+                </Flex>
             </Header>
 
             <Content style={{ padding: '24px' }}>
@@ -394,11 +421,13 @@ const HomePage = () => {
                         {renderCategoryList()}
                     </Col>
                 </Row>
+
                 <PostModal
                     openModal={openModal}
                     setOpenModal={setOpenModal}
-                    dataInit={null}
-                    setDataInit={() => { }}
+                    // dataInit={null}
+                    // setDataInit={() => { }}
+                    postType={postType}
                     onSuccess={handleCreatedPostSuccess}
                 />
             </Content>

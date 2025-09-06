@@ -306,8 +306,3 @@ export const POST_TYPE_LIST = [
   { label: "Thông báo", value: "ANNOUNCEMENT" },
   { label: "Khảo sát", value: "SURVEY" },
 ];
-
-// export const POST_STATUS_LIST = [
-//   { label: "Thông báo", value: "ANNOUNCEMENT" },
-//   { label: "Khảo sát", value: "SURVEY" },
-// ];

@@ -17,6 +17,10 @@ import {
   IListSessions,
   ICategory,
   IPost,
+  IQuestion,
+  IOption,
+  ICreateSurveyBulk,
+  IAnswer,
 } from "@/types/backend";
 import axios from "config/axios-customize";
 
@@ -445,4 +449,22 @@ export const callFetchPost = (query: string) => {
 
 export const callFetchPostById = (id: string) => {
   return axios.get<IBackendRes<IPost>>(`/api/v1/posts/${id}`);
+};
+
+export const callCreateSurveyBulk = (surveyData: ICreateSurveyBulk) => {
+  return axios.post<IBackendRes<IPost>>(
+    "/api/v1/posts/survey-bulk",
+    surveyData
+  );
+};
+
+/**
+ * 
+Module Answer
+ */
+
+export const callCreateAnswer = (answer: IAnswer) => {
+  return axios.post<IBackendRes<IAnswer>>("/api/v1/answers", {
+    ...answer,
+  });
 };

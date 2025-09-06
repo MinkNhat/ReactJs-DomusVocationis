@@ -300,10 +300,103 @@ export interface IPost {
     id: string;
     name?: string;
   };
+  questions?: IQuestion[];
+  submitted?: boolean;
 
   createdBy?: string;
   isDeleted?: boolean;
   deletedAt?: boolean | null;
   createdAt?: string;
   updatedAt?: string;
+}
+
+// Question interface for surveys
+export interface IQuestion {
+  id?: string;
+  questionText: string;
+  type: "MULTIPLE_CHOICE" | "TEXT";
+  orderDisplay: number;
+  required: boolean;
+  allowMultiple: boolean;
+
+  // Relationships
+  post?: {
+    id: string;
+  };
+  options?: IOption[];
+  answers?: IAnswer[];
+
+  // Audit fields
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
+  updatedBy?: string;
+}
+
+// Option interface for multiple choice questions
+export interface IOption {
+  id?: string;
+  optionText: string;
+  orderDisplay: number;
+
+  // Relationships
+  question?: {
+    id: string;
+  };
+  answers?: IAnswer[];
+
+  // Audit fields
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
+  updatedBy?: string;
+}
+
+// Answer interface for user responses
+export interface IAnswer {
+  id?: string;
+  answerText?: string; // For TEXT type questions
+
+  // Relationships
+  question?: {
+    id: string;
+    questionText?: string;
+  };
+  user?: {
+    id: string;
+    full_name?: string;
+  };
+  selectedOptions?: {
+    id: string;
+    optionText?: string;
+  }[]; // For MULTIPLE_CHOICE type questions
+
+  // Audit fields
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
+  updatedBy?: string;
+}
+
+export interface ICreateSurveyBulk {
+  title: string;
+  content: string;
+  type: string;
+  status: string;
+  expiresAt?: string;
+  publicPost: boolean;
+  categoryId: string;
+
+  questions: {
+    questionText: string;
+    type: string;
+    orderDisplay: number;
+    required: boolean;
+    allowMultiple?: boolean;
+
+    options?: {
+      optionText: string;
+      orderDisplay: number;
+    }[];
+  }[];
 }
