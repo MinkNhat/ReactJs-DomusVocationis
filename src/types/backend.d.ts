@@ -400,3 +400,70 @@ export interface ICreateSurveyBulk {
     }[];
   }[];
 }
+
+export interface IFeeType {
+  id?: string;
+  name: string;
+  description?: string;
+  active?: boolean;
+
+  frequency: string;
+  amount: double;
+  startDate?: string;
+
+  createdBy?: string;
+  isDeleted?: boolean;
+  deletedAt?: boolean | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface IRegistrationFee {
+  id?: string;
+  registrationDate?: string;
+  nextPaymentDate?: string | null;
+  active: boolean;
+
+  user?: {
+    id: string;
+    fullName?: string;
+    email?: string;
+  };
+  feeType: IFeeType;
+
+  createdBy?: string;
+  isDeleted?: boolean;
+  deletedAt?: boolean | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface IPayment {
+  id: string;
+  transactionCode: string;
+  amount: number;
+  dueDate: string;
+  status: string;
+  method: string;
+  paymentDate: string;
+
+  user: IUser;
+  feeRegistration: IRegistrationFee;
+
+  createdBy?: string;
+  isDeleted?: boolean;
+  deletedAt?: boolean | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface IVNPayPayment {
+  requestId: string;
+  userId: string;
+  txnRef: string;
+  amount: number;
+}
+
+export interface IResVNPayPayment {
+  paymentUrl: string;
+}

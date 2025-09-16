@@ -15,7 +15,8 @@ import {
     Card,
     Carousel,
     Flex,
-    Space
+    Space,
+    GetProps
 } from 'antd';
 import {
     PlusOutlined,
@@ -25,7 +26,7 @@ import {
 import styles from '@/styles/client.module.scss';
 import { ICategory, IPost } from '@/types/backend';
 import { callFetchCategory, callFetchPost } from '@/config/api';
-import { sfEqual } from "spring-filter-query-builder";
+import { sfEqual, sfLike } from "spring-filter-query-builder";
 import dayjs from 'dayjs';
 import relativeTime from "dayjs/plugin/relativeTime";
 import { getRelativeTime } from '@/config/utils';
@@ -36,6 +37,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 dayjs.extend(relativeTime);
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
+
+type SearchProps = GetProps<typeof Input.Search>;
+const { Search } = Input;
 
 interface IPaginationMeta {
     page: number;
@@ -83,6 +87,8 @@ const HomePage = () => {
         fetchCategory();
     }, []);
 
+
+    //check
     useEffect(() => {
         if (categories.length > 0) {
             if (cateId) {
@@ -123,12 +129,17 @@ const HomePage = () => {
         }
     };
 
-    const fetchPost = async (cateId: string, page: number = 1) => {
+    const fetchPost = async (cateId: string, page: number = 1, search: string = "") => {
         setLoading(prev => ({ ...prev, posts: true }));
         const pageSize = 10;
 
         try {
-            let query = `page=${page}&size=${pageSize}&filter=${sfEqual("category.id", cateId)}&sort=createdAt,desc`;
+            let query = `page=${page}&size=${pageSize}&filter=${sfEqual("category.id", cateId)}`;
+            if (search.trim() !== "") {
+                query += ` and ${sfLike("title", search)}`;
+            }
+            query += `&sort=createdAt,desc`;
+
             const res = await callFetchPost(query);
             if (res && res.data) {
                 setPosts(res.data.result);
@@ -256,6 +267,9 @@ const HomePage = () => {
                     boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
                 }}
                 bodyStyle={{ padding: 0 }}
+                extra={
+                    <Search placeholder="input search text" onSearch={onSearch} enterButton />
+                }
             >
                 {loading.posts ? (
                     <div style={{ textAlign: 'center', padding: '60px 0' }}>
@@ -361,6 +375,13 @@ const HomePage = () => {
             fetchPost(selectedCategory, pagination?.page);
         }
     };
+
+    const onSearch: SearchProps['onSearch'] = (value, _e, info) => {
+        console.log(info?.source, value);
+        if (selectedCategory) {
+            fetchPost(selectedCategory, 1, value);
+        }
+    }
 
     return (
         <Layout style={{ background: '#f5f5f5' }}>

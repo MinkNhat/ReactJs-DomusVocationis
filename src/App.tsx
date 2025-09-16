@@ -18,13 +18,15 @@ import UserPage from './pages/admin/user';
 import PeriodPage from './pages/admin/period';
 import { fetchAccount } from './redux/slice/accountSlide';
 import LayoutApp from './components/share/layout.app';
-import JobTabs from './pages/admin/job/job.tabs';
 import { App as AntdApp } from 'antd';
 import LayoutClient from './components/client/layout.client';
 import ClientPeriodPage from './pages/client/period';
 import ClientPeriodDetailPage from './pages/client/period/detail.period';
+import ClientFeePage from './pages/client/fee';
 import CategoryPage from './pages/admin/category';
 import ClientPostPageDetail from './pages/home/detail.home';
+import ViewUpsertJob from './components/admin/fee/upsert.job';
+import FeeTabs from './pages/admin/fee/fee.tabs';
 
 export default function App() {
   const dispatch = useAppDispatch();
@@ -51,6 +53,8 @@ export default function App() {
 
         { path: "period", element: <ClientPeriodPage /> },
         { path: "period/:id", element: <ClientPeriodDetailPage /> },
+
+        { path: "fee", element: <ClientFeePage /> },
       ],
     },
 
@@ -87,19 +91,20 @@ export default function App() {
             </ProtectedRoute>
         },
 
-        // {
-        //   path: "job",
-        //   children: [
-        //     {
-        //       index: true,
-        //       element: <ProtectedRoute><JobTabs /></ProtectedRoute>
-        //     },
-        //     {
-        //       path: "upsert", element:
-        //         <ProtectedRoute><ViewUpsertJob /></ProtectedRoute>
-        //     }
-        //   ]
-        // },
+        {
+          path: "fee",
+          children: [
+            {
+              index: true,
+              element: <ProtectedRoute><FeeTabs /></ProtectedRoute>
+            },
+            {
+              path: "upsert", element:
+                <ProtectedRoute><ViewUpsertJob /></ProtectedRoute>
+            }
+          ]
+        },
+
         {
           path: "permission",
           element:

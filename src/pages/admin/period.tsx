@@ -352,7 +352,7 @@ const PeriodPage = () => {
             >
                 <DataTable<IPeriod>
                     actionRef={tableRef}
-                    headerTitle="Danh sách Công Ty"
+                    headerTitle="Danh sách Phiên đăng ký"
                     rowKey="id"
                     loading={isFetching}
                     columns={columns}

@@ -306,3 +306,20 @@ export const POST_TYPE_LIST = [
   { label: "Thông báo", value: "ANNOUNCEMENT" },
   { label: "Khảo sát", value: "SURVEY" },
 ];
+
+export const FEE_FREQUENCY_LIST = [
+  { label: "Một lần", value: "ONE_TIME", color: "default" },
+  { label: "Mỗi tuần", value: "WEEKLY", color: "green" },
+  { label: "Mỗi tháng", value: "MONTHLY", color: "blue" },
+  { label: "Mỗi năm", value: "YEARLY", color: "purple" },
+];
+
+export const PAYMENT_STATUS_LIST = [
+  { label: "Chưa thanh toán", value: "PENDING", color: "gold" },
+  { label: "Đã thanh toán", value: "COMPLETED", color: "green" },
+  { label: "Đã xảy ra lỗi", value: "FAILED", color: "red" },
+];
+
+export function formatCurrency(value: number): string {
+  return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}

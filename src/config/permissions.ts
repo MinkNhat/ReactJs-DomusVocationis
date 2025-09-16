@@ -21,6 +21,7 @@ export const ALL_PERMISSIONS = {
       module: "PERMISSIONS",
     },
   },
+
   ROLES: {
     GET_PAGINATE: { method: "GET", apiPath: "/api/v1/roles", module: "ROLES" },
     CREATE: { method: "POST", apiPath: "/api/v1/roles", module: "ROLES" },
@@ -31,6 +32,7 @@ export const ALL_PERMISSIONS = {
       module: "ROLES",
     },
   },
+
   USERS: {
     GET_PAGINATE: { method: "GET", apiPath: "/api/v1/users", module: "USERS" },
     CREATE: { method: "POST", apiPath: "/api/v1/users", module: "USERS" },
@@ -41,6 +43,7 @@ export const ALL_PERMISSIONS = {
       module: "USERS",
     },
   },
+
   PERIODS: {
     GET_PAGINATE: {
       method: "GET",
@@ -55,6 +58,7 @@ export const ALL_PERMISSIONS = {
       module: "PERIODS",
     },
   },
+
   CATEGORIES: {
     GET_PAGINATE: {
       method: "GET",
@@ -77,6 +81,29 @@ export const ALL_PERMISSIONS = {
       module: "CATEGORIES",
     },
   },
+
+  FEE_TYPES: {
+    GET_PAGINATE: {
+      method: "GET",
+      apiPath: "/api/v1/fee-types",
+      module: "FEE_TYPES",
+    },
+    CREATE: {
+      method: "POST",
+      apiPath: "/api/v1/fee-types",
+      module: "FEE_TYPES",
+    },
+    UPDATE: {
+      method: "PUT",
+      apiPath: "/api/v1/fee-types",
+      module: "FEE_TYPES",
+    },
+    DELETE: {
+      method: "DELETE",
+      apiPath: "/api/v1/fee-types/{id}",
+      module: "FEE_TYPES",
+    },
+  },
 };
 
 export const ALL_MODULES = {
@@ -86,4 +113,5 @@ export const ALL_MODULES = {
   USERS: "USERS",
   PERIODS: "PERIODS",
   CATEGORIES: "CATEGORIES",
+  FEE_TYPES: "FEE_TYPES",
 };

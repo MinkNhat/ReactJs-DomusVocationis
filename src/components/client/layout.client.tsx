@@ -9,6 +9,10 @@ import {
     HomeFilled,
     HeartTwoTone,
     InfoCircleOutlined,
+    CalendarOutlined,
+    ScheduleOutlined,
+    FileTextOutlined,
+    SettingOutlined,
 } from '@ant-design/icons';
 import { Layout, Menu, Dropdown, Space, message, Avatar, Button, theme } from 'antd';
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
@@ -91,19 +95,25 @@ const LayoutClient = () => {
             ...(isAuthenticated || ACL_ENABLE === 'false' ? [{
                 label: <Link to='/period'>Đăng ký lịch</Link>,
                 key: '/period',
-                icon: <InfoCircleOutlined />
+                icon: <ScheduleOutlined />
+            }] : []),
+
+            ...(isAuthenticated || ACL_ENABLE === 'false' ? [{
+                label: <Link to='/fee'>Các dịch vụ</Link>,
+                key: '/fee',
+                icon: <FileTextOutlined />
             }] : []),
 
             ...(isAuthenticated || ACL_ENABLE === 'false' ? [{
                 label: <Link to='/schedule'>Lịch của tôi</Link>,
                 key: '/schedule',
-                icon: <InfoCircleOutlined />
+                icon: <CalendarOutlined />
             }] : []),
 
             ...(isAuthenticated || ACL_ENABLE === 'false' ? [{
                 label: <Link to='/info'>Thông tin cá nhân</Link>,
                 key: '/info',
-                icon: <InfoCircleOutlined />
+                icon: <SettingOutlined />
             }] : []),
 
             // ...(viewRole || ACL_ENABLE === 'false' ? [{

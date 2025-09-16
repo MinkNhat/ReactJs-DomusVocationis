@@ -21,6 +21,11 @@ import {
   IOption,
   ICreateSurveyBulk,
   IAnswer,
+  IFeeType,
+  IRegistrationFee,
+  IPayment,
+  IVNPayPayment,
+  IResVNPayPayment,
 } from "@/types/backend";
 import axios from "config/axios-customize";
 
@@ -466,5 +471,74 @@ Module Answer
 export const callCreateAnswer = (answer: IAnswer) => {
   return axios.post<IBackendRes<IAnswer>>("/api/v1/answers", {
     ...answer,
+  });
+};
+
+/**
+ * 
+Module Fee Type
+ */
+export const callCreateFeeType = (feeType: IFeeType) => {
+  return axios.post<IBackendRes<IFeeType>>("/api/v1/fee-types", {
+    ...feeType,
+  });
+};
+
+export const callUpdateFeeType = (feeType: IFeeType) => {
+  return axios.put<IBackendRes<IFeeType>>(`/api/v1/fee-types`, {
+    ...feeType,
+  });
+};
+
+export const callDeleteFeeType = (id: string) => {
+  return axios.delete<IBackendRes<IFeeType>>(`/api/v1/fee-types/${id}`);
+};
+
+export const callFetchFeeType = (query: string) => {
+  return axios.get<IBackendRes<IModelPaginate<IFeeType>>>(
+    `/api/v1/fee-types?${query}`
+  );
+};
+
+/**
+ * 
+Module Registered Fee
+ */
+
+export const callCreateFeeRegister = (feeRegis: IRegistrationFee) => {
+  return axios.post<IBackendRes<IRegistrationFee>>("/api/v1/fee-registers", {
+    ...feeRegis,
+  });
+};
+
+export const callFetchRegisteredFeeByUserId = (
+  query: string,
+  userId: string
+) => {
+  return axios.get<IBackendRes<IModelPaginate<IRegistrationFee>>>(
+    `/api/v1/users/${userId}/fee-registers?${query}`
+  );
+};
+
+export const callUpdateFeeRegister = (feeRegis: IRegistrationFee) => {
+  return axios.put<IBackendRes<IFeeType>>(`/api/v1/fee-registers`, {
+    ...feeRegis,
+  });
+};
+
+/**
+ * 
+Module Payment
+ */
+
+export const callFetchPaymentsByUserId = (query: string, userId: string) => {
+  return axios.get<IBackendRes<IModelPaginate<IPayment>>>(
+    `/api/v1/users/${userId}/payments?${query}`
+  );
+};
+
+export const callVNPayPayment = (pay: IVNPayPayment) => {
+  return axios.post<IBackendRes<IResVNPayPayment>>(`/api/v1/payments/vn-pay`, {
+    ...pay,
   });
 };

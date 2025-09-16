@@ -1,34 +1,35 @@
 
 import DataTable from "@/components/client/data-table";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { ISkill } from "@/types/backend";
+import { IFeeType } from "@/types/backend";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { ActionType, ProColumns } from '@ant-design/pro-components';
-import { Button, Popconfirm, Space, message, notification } from "antd";
+import { Badge, Button, Popconfirm, Space, Tag, message, notification } from "antd";
 import { useState, useRef } from 'react';
 import dayjs from 'dayjs';
-import { callDeleteSkill } from "@/config/api";
+import { callDeleteFeeType } from "@/config/api";
 import queryString from 'query-string';
 import { sfLike } from "spring-filter-query-builder";
-import { fetchSkill } from "@/redux/slice/skillSlide";
-import ModalSkill from "@/components/admin/skill/modal.skill";
+import { fetchFeeType } from "@/redux/slice/feeTypeSlide";
+import { FEE_FREQUENCY_LIST } from "@/config/utils";
+import ModalFeeType from "@/components/admin/fee/modal.fee";
 
-const SkillPage = () => {
+const FeeTypePage = () => {
     const [openModal, setOpenModal] = useState<boolean>(false);
-    const [dataInit, setDataInit] = useState<ISkill | null>(null);
+    const [dataInit, setDataInit] = useState<IFeeType | null>(null);
 
     const tableRef = useRef<ActionType>();
 
-    const isFetching = useAppSelector(state => state.skill.isFetching);
-    const meta = useAppSelector(state => state.skill.meta);
-    const skills = useAppSelector(state => state.skill.result);
+    const isFetching = useAppSelector(state => state.feeType.isFetching);
+    const meta = useAppSelector(state => state.feeType.meta);
+    const feeTypes = useAppSelector(state => state.feeType.result);
     const dispatch = useAppDispatch();
 
-    const handleDeleteSkill = async (id: string | undefined) => {
+    const handleDeleteFeeType = async (id: string | undefined) => {
         if (id) {
-            const res = await callDeleteSkill(id);
-            if (res && +res.statusCode === 200) {
-                message.success('Xóa Skill thành công');
+            const res = await callDeleteFeeType(id);
+            if (res && res.statusCode === 200) {
+                message.success('Xóa FeeType thành công');
                 reloadTable();
             } else {
                 notification.error({
@@ -43,7 +44,7 @@ const SkillPage = () => {
         tableRef?.current?.reload();
     }
 
-    const columns: ProColumns<ISkill>[] = [
+    const columns: ProColumns<IFeeType>[] = [
         {
             title: 'STT',
             key: 'index',
@@ -52,29 +53,84 @@ const SkillPage = () => {
             render: (text, record, index) => {
                 return (
                     <>
-                        {(index + 1) + (meta.page - 1) * (meta.pageSize)}
+                        <Badge color="#c3c3c3" count={(index + 1) + (meta.page - 1) * (meta.pageSize)}></Badge>
                     </>)
             },
             hideInSearch: true,
         },
+
         {
-            title: 'Name',
+            title: 'Tên loại chi phí',
             dataIndex: 'name',
             sorter: true,
         },
 
         {
-            title: 'Created By',
-            dataIndex: 'createdBy',
+            title: 'Mô tả',
+            dataIndex: 'description',
+            sorter: false,
             hideInSearch: true,
         },
 
         {
-            title: 'Updated By',
-            dataIndex: 'updatedBy',
+            title: 'Trạng thái',
+            dataIndex: 'active',
+            hideInSearch: true,
+            width: 140,
+            render: (text, record, index, action) => {
+                return (
+                    <span>
+                        {record.active ? (
+                            <Tag color="green" >ACTIVE</Tag>
+                        ) : (
+                            <Tag color="red" >INACTIVE</Tag>
+                        )}
+                    </span>
+                )
+            },
+            filters: [
+                {
+                    text: 'Đang hoạt động',
+                    value: true,
+                },
+                {
+                    text: 'Không hoạt động',
+                    value: false,
+                }
+            ],
+            onFilter: (value, record) => record.active === value,
+        },
+
+        {
+            title: 'Kỳ hạn',
+            dataIndex: 'frequency',
+            hideInSearch: true,
+            filters: FEE_FREQUENCY_LIST.map(item => ({
+                text: item.label,
+                value: item.value
+            })),
+            renderText(text, record, index, action) {
+                const frequency = FEE_FREQUENCY_LIST.find(item => item.value === record.frequency);
+                return (
+                    <Tag color={frequency?.color}>{frequency ? frequency.label : record.frequency}</Tag>
+                );
+            },
+            onFilter: (value, record) => record.frequency === value,
+        },
+
+        {
+            title: 'Số tiền / kỳ hạn',
+            dataIndex: 'amount',
+            sorter: true,
             hideInSearch: true,
         },
 
+        {
+            title: 'Ngày bắt đầu',
+            dataIndex: 'startDate',
+            sorter: true,
+            hideInSearch: true,
+        },
 
         {
             title: 'CreatedAt',
@@ -122,9 +178,9 @@ const SkillPage = () => {
 
                     <Popconfirm
                         placement="leftTop"
-                        title={"Xác nhận xóa skill"}
-                        description={"Bạn có chắc chắn muốn xóa skill này ?"}
-                        onConfirm={() => handleDeleteSkill(entity.id)}
+                        title={"Xác nhận xóa loại chi phí"}
+                        description={"Bạn có chắc chắn muốn xóa loại chi phí này ?"}
+                        onConfirm={() => handleDeleteFeeType(entity.id)}
                         okText="Xác nhận"
                         cancelText="Hủy"
                     >
@@ -180,16 +236,16 @@ const SkillPage = () => {
 
     return (
         <div>
-            <DataTable<ISkill>
+            <DataTable<IFeeType>
                 actionRef={tableRef}
-                headerTitle="Danh sách Skill"
+                headerTitle="Danh sách các loại phí"
                 rowKey="id"
                 loading={isFetching}
                 columns={columns}
-                dataSource={skills}
+                dataSource={feeTypes}
                 request={async (params, sort, filter): Promise<any> => {
                     const query = buildQuery(params, sort, filter);
-                    dispatch(fetchSkill({ query }))
+                    dispatch(fetchFeeType({ query }))
                 }}
                 scroll={{ x: true }}
                 pagination={
@@ -213,8 +269,17 @@ const SkillPage = () => {
                         </Button>
                     );
                 }}
+                columnsState={{
+                    persistenceKey: 'fee-type-table',
+                    persistenceType: 'localStorage',
+                    defaultValue: {
+                        createdAt: { show: false },
+                        updatedAt: { show: false },
+                    },
+                }}
             />
-            <ModalSkill
+
+            <ModalFeeType
                 openModal={openModal}
                 setOpenModal={setOpenModal}
                 reloadTable={reloadTable}
@@ -225,4 +290,4 @@ const SkillPage = () => {
     )
 }
 
-export default SkillPage;
+export default FeeTypePage;

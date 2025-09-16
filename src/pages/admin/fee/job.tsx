@@ -9,7 +9,6 @@ import dayjs from 'dayjs';
 import { callDeleteJob } from "@/config/api";
 import queryString from 'query-string';
 import { useNavigate } from "react-router-dom";
-import { fetchJob } from "@/redux/slice/jobSlide";
 import Access from "@/components/share/access";
 import { ALL_PERMISSIONS } from "@/config/permissions";
 import { sfIn } from "spring-filter-query-builder";
@@ -17,9 +16,9 @@ import { sfIn } from "spring-filter-query-builder";
 const JobPage = () => {
     const tableRef = useRef<ActionType>();
 
-    const isFetching = useAppSelector(state => state.job.isFetching);
-    const meta = useAppSelector(state => state.job.meta);
-    const jobs = useAppSelector(state => state.job.result);
+    const isFetching = useAppSelector(state => state.feeType.isFetching);
+    const meta = useAppSelector(state => state.feeType.meta);
+    const jobs = useAppSelector(state => state.feeType.result);
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
 
@@ -140,7 +139,7 @@ const JobPage = () => {
             render: (_value, entity, _index, _action) => (
                 <Space>
                     < Access
-                        permission={ALL_PERMISSIONS.JOBS.UPDATE}
+                        permission={ALL_PERMISSIONS.FEE_TYPES.UPDATE}
                         hideChildren
                     >
                         <EditOutlined
@@ -155,7 +154,7 @@ const JobPage = () => {
                         />
                     </Access >
                     <Access
-                        permission={ALL_PERMISSIONS.JOBS.DELETE}
+                        permission={ALL_PERMISSIONS.FEE_TYPES.DELETE}
                         hideChildren
                     >
                         <Popconfirm
@@ -230,9 +229,10 @@ const JobPage = () => {
     return (
         <div>
             <Access
-                permission={ALL_PERMISSIONS.JOBS.GET_PAGINATE}
+                permission={ALL_PERMISSIONS.FEE_TYPES.GET_PAGINATE}
             >
-                <DataTable<IJob>
+                <>div</>
+                {/* <DataTable<IJob>
                     actionRef={tableRef}
                     headerTitle="Danh sách Jobs"
                     rowKey="id"
@@ -265,7 +265,7 @@ const JobPage = () => {
                             </Button>
                         );
                     }}
-                />
+                /> */}
             </Access>
         </div >
     )

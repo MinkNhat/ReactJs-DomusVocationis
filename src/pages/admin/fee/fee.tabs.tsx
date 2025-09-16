@@ -1,11 +1,11 @@
 import { Tabs } from 'antd';
 import type { TabsProps } from 'antd';
 import JobPage from './job';
-import SkillPage from './skill';
 import Access from '@/components/share/access';
 import { ALL_PERMISSIONS } from '@/config/permissions';
+import FeeTypePage from './fee-type';
 
-const JobTabs = () => {
+const FeeTabs = () => {
     const onChange = (key: string) => {
         // console.log(key);
     };
@@ -13,20 +13,20 @@ const JobTabs = () => {
     const items: TabsProps['items'] = [
         {
             key: '1',
-            label: 'Manage Jobs',
+            label: 'Các Thanh toán',
             children: <JobPage />,
         },
         {
             key: '2',
-            label: 'Manage Skills',
-            children: <SkillPage />,
+            label: 'Các Loại Phí',
+            children: <FeeTypePage />,
         },
 
     ];
     return (
         <div>
             <Access
-                permission={ALL_PERMISSIONS.JOBS.GET_PAGINATE}
+                permission={ALL_PERMISSIONS.FEE_TYPES.GET_PAGINATE}
             >
                 <Tabs
                     defaultActiveKey="1"
@@ -38,4 +38,4 @@ const JobTabs = () => {
     );
 }
 
-export default JobTabs;
+export default FeeTabs;

@@ -18,7 +18,7 @@ import ModalCategory from "@/components/admin/category/modal.category";
 const CategoryPage = () => {
     const [openModal, setOpenModal] = useState<boolean>(false);
     const [dataInit, setDataInit] = useState<ICategory | null>(null);
-    const [openViewDetail, setOpenViewDetail] = useState(false);
+    // const [openViewDetail, setOpenViewDetail] = useState(false);
 
     const tableRef = useRef<ActionType>();
 
@@ -55,8 +55,8 @@ const CategoryPage = () => {
             render: (text, record, index) => {
                 return (
                     <a onClick={() => {
-                        setOpenViewDetail(true);
-                        setDataInit(record);
+                        // setOpenViewDetail(true);
+                        // setDataInit(record);
                     }}>
                         <Badge color="#c3c3c3" count={(index + 1) + (meta.page - 1) * (meta.pageSize)}></Badge>
                     </a>)

@@ -12,6 +12,7 @@ import {
     ScheduleOutlined,
     CalendarOutlined,
     FolderOpenOutlined,
+    DollarOutlined,
 } from '@ant-design/icons';
 import { Layout, Menu, Dropdown, Space, message, Avatar, Button } from 'antd';
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
@@ -64,7 +65,12 @@ const LayoutAdmin = () => {
 
             const viewPermission = permissions?.find(item =>
                 item.apiPath === ALL_PERMISSIONS.PERMISSIONS.GET_PAGINATE.apiPath
-                && item.method === ALL_PERMISSIONS.USERS.GET_PAGINATE.method
+                && item.method === ALL_PERMISSIONS.PERMISSIONS.GET_PAGINATE.method
+            )
+
+            const viewFee = permissions?.find(item =>
+                item.apiPath === ALL_PERMISSIONS.FEE_TYPES.GET_PAGINATE.apiPath
+                && item.method === ALL_PERMISSIONS.FEE_TYPES.GET_PAGINATE.method
             )
 
             const full = [
@@ -90,6 +96,12 @@ const LayoutAdmin = () => {
                     label: <Link to='/admin/category'>Category</Link>,
                     key: '/admin/category',
                     icon: <FolderOpenOutlined />
+                }] : []),
+
+                ...(viewFee || ACL_ENABLE === 'false' ? [{
+                    label: <Link to='/admin/fee'>Fee</Link>,
+                    key: '/admin/fee',
+                    icon: <DollarOutlined />
                 }] : []),
 
                 ...(viewPermission || ACL_ENABLE === 'false' ? [{
