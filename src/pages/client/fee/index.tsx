@@ -1,18 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import {
     Card,
-    Table,
     Button,
     Row,
     Col,
     Tag,
-    Space,
     Typography,
     message,
-    Modal,
-    Descriptions,
-    Divider,
-    Badge,
     Tabs
 } from 'antd';
 import {
@@ -27,7 +21,6 @@ import dayjs from 'dayjs';
 import { callCreateFeeRegister, callFetchFeeType, callFetchRegisteredFeeByUserId, callUpdateFeeRegister } from '@/config/api';
 import { sfEqual } from "spring-filter-query-builder";
 import { useAppSelector } from '@/redux/hooks';
-import { render } from 'preact/compat';
 import RegisteredFeeTab from './registered-fee.tab';
 import PaymentTab from './payment.tab';
 import DetailFeeModal from './detail.modal';
@@ -87,16 +80,12 @@ const FeePage = () => {
         }
     };
 
-    // Handle tab change and fetch data accordingly
     const handleTabChange = (key: string) => {
         setActiveTab(key);
-
-        // Fetch data based on tab
         if (key === '1') {
-            // Registered fees tab
             fetchRegisteredFees();
         } else if (key === '2') {
-            // Payment history tab - sẽ được handle bởi PaymentTab component thông qua reloadPayments prop
+            // Payment history tab
         }
     };
 

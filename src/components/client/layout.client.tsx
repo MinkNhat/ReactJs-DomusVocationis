@@ -21,8 +21,10 @@ import { callLogout } from 'config/api';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { isMobile } from 'react-device-detect';
 import type { MenuProps } from 'antd';
-import { setLogoutAction } from '@/redux/slice/accountSlide';
+import { setActiveMenu, setLogoutAction } from '@/redux/slice/accountSlide';
 import styles from '@/styles/client.module.scss';
+import ManageAccount from './modal/manage.account';
+import { getActiveMenuFromPath } from '@/config/utils';
 
 const { Sider, Content, Footer } = Layout;
 
@@ -31,20 +33,28 @@ const LayoutClient = () => {
     const rootRef = useRef<HTMLDivElement>(null);
 
     const [collapsed, setCollapsed] = useState(false);
-    const [activeMenu, setActiveMenu] = useState('');
+    // const [activeMenu, setActiveMenu] = useState('');
     const user = useAppSelector(state => state.account.user);
     const [menuItems, setMenuItems] = useState<MenuProps['items']>([]);
 
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const isAuthenticated = useAppSelector(state => state.account.isAuthenticated);
+    const activeMenu = useAppSelector(state => state.account.activeMenu);
 
     useEffect(() => {
         if (rootRef && rootRef.current) {
             rootRef.current.scrollIntoView({ behavior: 'smooth' });
         }
-        setActiveMenu(location.pathname)
-    }, [location]);
+
+        const newActiveMenu = getActiveMenuFromPath(location.pathname);
+        dispatch(setActiveMenu(newActiveMenu));
+    }, [location, dispatch]);
+
+
+    const handleMenuClick = (e: { key: string }) => {
+        dispatch(setActiveMenu(e.key));
+    };
 
     const handleLogout = async () => {
         const res = await callLogout();
@@ -111,16 +121,10 @@ const LayoutClient = () => {
             }] : []),
 
             ...(isAuthenticated || ACL_ENABLE === 'false' ? [{
-                label: <Link to='/info'>Thông tin cá nhân</Link>,
-                key: '/info',
+                label: <Link to='/profile'>Thông tin cá nhân</Link>,
+                key: '/profile',
                 icon: <SettingOutlined />
             }] : []),
-
-            // ...(viewRole || ACL_ENABLE === 'false' ? [{
-            //     label: <Link to='/admin/role'>Role</Link>,
-            //     key: '/admin/role',
-            //     icon: <ExceptionOutlined />
-            // }] : []),
         ];
 
         setMenuItems(full);
@@ -145,14 +149,14 @@ const LayoutClient = () => {
                             selectedKeys={[activeMenu]}
                             mode="inline"
                             items={menuItems}
-                            onClick={(e) => setActiveMenu(e.key)}
+                            onClick={handleMenuClick}
                         />
                     </Sider>
                     :
                     <Menu
                         selectedKeys={[activeMenu]}
                         items={menuItems}
-                        onClick={(e) => setActiveMenu(e.key)}
+                        onClick={handleMenuClick}
                         mode="horizontal"
                     />
                 }

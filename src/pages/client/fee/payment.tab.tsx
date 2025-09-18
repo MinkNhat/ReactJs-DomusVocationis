@@ -1,4 +1,4 @@
-import { callFetchPaymentsByUserId, callVNPayPayment } from "@/config/api";
+import { callFetchPaymentsByUser, callVNPayPayment } from "@/config/api";
 import { FEE_FREQUENCY_LIST, formatCurrency, FORMATE_DATE_TIME_VN, FORMATE_DATE_VN, PAYMENT_STATUS_LIST } from "@/config/utils";
 import { useAppSelector } from "@/redux/hooks";
 import { IFeeType, IPayment, IRegistrationFee } from "@/types/backend";
@@ -11,13 +11,11 @@ import { sfEqual } from "spring-filter-query-builder";
 
 const { Title, Text } = Typography;
 
-interface IProps {
-    reloadPayments?: () => void;
-}
+// interface IProps {
+//     reloadPayments?: () => void;
+// }
 
-const PaymentTab: React.FC<IProps> = ({
-    reloadPayments,
-}) => {
+const PaymentTab = () => {
     const [payments, setPayments] = useState<IPayment[]>([]);
     const [loading, setLoading] = useState(false);
     const userId = useAppSelector(state => state.account.user).id;
@@ -33,7 +31,7 @@ const PaymentTab: React.FC<IProps> = ({
         try {
             setLoading(true);
             let query = `filter=${sfEqual("active", "true")}`;
-            let res = await callFetchPaymentsByUserId(query, userId);
+            let res = await callFetchPaymentsByUser(query, userId);
             if (res && res.data) {
                 setPayments(res.data.result);
             }

@@ -13,6 +13,8 @@ import { sfLike } from "spring-filter-query-builder";
 import { fetchFeeType } from "@/redux/slice/feeTypeSlide";
 import { FEE_FREQUENCY_LIST } from "@/config/utils";
 import ModalFeeType from "@/components/admin/fee/modal.fee";
+import Access from "@/components/share/access";
+import { ALL_PERMISSIONS } from "@/config/permissions";
 
 const FeeTypePage = () => {
     const [openModal, setOpenModal] = useState<boolean>(false);
@@ -236,56 +238,60 @@ const FeeTypePage = () => {
 
     return (
         <div>
-            <DataTable<IFeeType>
-                actionRef={tableRef}
-                headerTitle="Danh sách các loại phí"
-                rowKey="id"
-                loading={isFetching}
-                columns={columns}
-                dataSource={feeTypes}
-                request={async (params, sort, filter): Promise<any> => {
-                    const query = buildQuery(params, sort, filter);
-                    dispatch(fetchFeeType({ query }))
-                }}
-                scroll={{ x: true }}
-                pagination={
-                    {
-                        current: meta.page,
-                        pageSize: meta.pageSize,
-                        showSizeChanger: true,
-                        total: meta.total,
-                        showTotal: (total, range) => { return (<div> {range[0]}-{range[1]} trên {total} rows</div>) }
+            <Access
+                permission={ALL_PERMISSIONS.FEE_TYPES.GET_PAGINATE}
+            >
+                <DataTable<IFeeType>
+                    actionRef={tableRef}
+                    headerTitle="Danh sách các loại phí"
+                    rowKey="id"
+                    loading={isFetching}
+                    columns={columns}
+                    dataSource={feeTypes}
+                    request={async (params, sort, filter): Promise<any> => {
+                        const query = buildQuery(params, sort, filter);
+                        dispatch(fetchFeeType({ query }))
+                    }}
+                    scroll={{ x: true }}
+                    pagination={
+                        {
+                            current: meta.page,
+                            pageSize: meta.pageSize,
+                            showSizeChanger: true,
+                            total: meta.total,
+                            showTotal: (total, range) => { return (<div> {range[0]}-{range[1]} trên {total} rows</div>) }
+                        }
                     }
-                }
-                rowSelection={false}
-                toolBarRender={(_action, _rows): any => {
-                    return (
-                        <Button
-                            icon={<PlusOutlined />}
-                            type="primary"
-                            onClick={() => setOpenModal(true)}
-                        >
-                            Thêm mới
-                        </Button>
-                    );
-                }}
-                columnsState={{
-                    persistenceKey: 'fee-type-table',
-                    persistenceType: 'localStorage',
-                    defaultValue: {
-                        createdAt: { show: false },
-                        updatedAt: { show: false },
-                    },
-                }}
-            />
+                    rowSelection={false}
+                    toolBarRender={(_action, _rows): any => {
+                        return (
+                            <Button
+                                icon={<PlusOutlined />}
+                                type="primary"
+                                onClick={() => setOpenModal(true)}
+                            >
+                                Thêm mới
+                            </Button>
+                        );
+                    }}
+                    columnsState={{
+                        persistenceKey: 'fee-type-table',
+                        persistenceType: 'localStorage',
+                        defaultValue: {
+                            createdAt: { show: false },
+                            updatedAt: { show: false },
+                        },
+                    }}
+                />
 
-            <ModalFeeType
-                openModal={openModal}
-                setOpenModal={setOpenModal}
-                reloadTable={reloadTable}
-                dataInit={dataInit}
-                setDataInit={setDataInit}
-            />
+                <ModalFeeType
+                    openModal={openModal}
+                    setOpenModal={setOpenModal}
+                    reloadTable={reloadTable}
+                    dataInit={dataInit}
+                    setDataInit={setDataInit}
+                />
+            </Access>
         </div>
     )
 }

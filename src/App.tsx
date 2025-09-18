@@ -9,7 +9,7 @@ import LoginPage from 'pages/auth/login';
 import RegisterPage from 'pages/auth/register';
 import LayoutAdmin from 'components/admin/layout.admin';
 import ProtectedRoute from 'components/share/protected-route.ts';
-import HomePage from 'pages/home';
+import HomePage from '@/pages/client/home';
 import styles from '@/styles/app.module.scss';
 import DashboardPage from './pages/admin/dashboard';
 import PermissionPage from './pages/admin/permission';
@@ -24,9 +24,11 @@ import ClientPeriodPage from './pages/client/period';
 import ClientPeriodDetailPage from './pages/client/period/detail.period';
 import ClientFeePage from './pages/client/fee';
 import CategoryPage from './pages/admin/category';
-import ClientPostPageDetail from './pages/home/detail.home';
-import ViewUpsertJob from './components/admin/fee/upsert.job';
+import ClientPostPageDetail from './pages/client/home/detail.home';
 import FeeTabs from './pages/admin/fee/fee.tabs';
+import ProfilePage from './pages/client/profile';
+import RequireAuth from './components/share/requied.auth';
+import SchedulePage from './pages/client/schedule';
 
 export default function App() {
   const dispatch = useAppDispatch();
@@ -47,14 +49,22 @@ export default function App() {
       element: (<LayoutApp><LayoutClient /></LayoutApp>),
       errorElement: <NotFound />,
       children: [
+        //public ( not require auth )
         { index: true, element: <HomePage /> },
-        { path: "/cate/:id", element: <HomePage /> },
+        { path: "cate/:id", element: <HomePage /> },
         { path: "post/:id", element: <ClientPostPageDetail /> },
 
-        { path: "period", element: <ClientPeriodPage /> },
-        { path: "period/:id", element: <ClientPeriodDetailPage /> },
-
-        { path: "fee", element: <ClientFeePage /> },
+        {
+          //private ( require auth )
+          element: <RequireAuth />,
+          children: [
+            { path: "period", element: <ClientPeriodPage /> },
+            { path: "period/:id", element: <ClientPeriodDetailPage /> },
+            { path: "fee", element: <ClientFeePage /> },
+            { path: "schedule", element: <SchedulePage /> },
+            { path: "profile", element: <ProfilePage /> },
+          ],
+        },
       ],
     },
 
@@ -98,10 +108,10 @@ export default function App() {
               index: true,
               element: <ProtectedRoute><FeeTabs /></ProtectedRoute>
             },
-            {
-              path: "upsert", element:
-                <ProtectedRoute><ViewUpsertJob /></ProtectedRoute>
-            }
+            // {
+            //   path: "upsert", element:
+            //     <ProtectedRoute><ViewUpsertJob /></ProtectedRoute>
+            // }
           ]
         },
 

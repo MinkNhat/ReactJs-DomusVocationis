@@ -104,6 +104,14 @@ export const ALL_PERMISSIONS = {
       module: "FEE_TYPES",
     },
   },
+
+  PAYMENTS: {
+    GET_PAGINATE: {
+      method: "GET",
+      apiPath: "/api/v1/payments",
+      module: "PAYMENTS",
+    },
+  },
 };
 
 export const ALL_MODULES = {
@@ -114,4 +122,5 @@ export const ALL_MODULES = {
   PERIODS: "PERIODS",
   CATEGORIES: "CATEGORIES",
   FEE_TYPES: "FEE_TYPES",
+  PAYMENTS: "PAYMENTS",
 };

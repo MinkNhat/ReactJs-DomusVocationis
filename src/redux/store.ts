@@ -6,6 +6,7 @@ import permissionReducer from "./slice/permissionSlide";
 import roleReducer from "./slice/roleSlide";
 import periodReducer from "./slice/periodSlide";
 import categoryReducer from "./slice/categorySlide";
+import paymentReducer from "./slice/paymentSlide";
 
 export const store = configureStore({
   reducer: {
@@ -16,6 +17,7 @@ export const store = configureStore({
     role: roleReducer,
     period: periodReducer,
     category: categoryReducer,
+    payment: paymentReducer,
   },
 });
 

@@ -55,29 +55,6 @@ export interface IResponseImport {
 Models Interface
  */
 
-export interface ICompany {
-  id?: string;
-  name?: string;
-  address?: string;
-  logo: string;
-  description?: string;
-  createdBy?: string;
-  isDeleted?: boolean;
-  deletedAt?: boolean | null;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-export interface ISkill {
-  id?: string;
-  name?: string;
-  createdBy?: string;
-  isDeleted?: boolean;
-  deletedAt?: boolean | null;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
 export interface IPeriod {
   id?: string;
   name: string;
@@ -102,9 +79,9 @@ export interface IPeriod {
 
 export interface ISession {
   id?: string;
-  registrationDate?: Date | string;
-  sessionTime?: string;
-  activity?: string;
+  registrationDate: Date | string;
+  sessionTime: string;
+  activity: string;
   totalSlot?: number;
   period?: {
     id: string;
@@ -151,78 +128,22 @@ export interface IUser {
   active: boolean;
   team?: Integer;
 
-  fatherName?: string;
-  fatherPhone?: string;
-  motherName?: string;
-  motherPhone?: string;
-  parish?: string;
-  deanery?: string;
-  spiritualDirectorName?: string;
-  sponsoringPriestName?: string;
-  university?: string;
-  major?: string;
+  fatherName?: string | null;
+  fatherPhone?: string | null;
+  motherName?: string | null;
+  motherPhone?: string | null;
+  parish?: string | null;
+  deanery?: string | null;
+  spiritualDirectorName?: string | null;
+  sponsoringPriestName?: string | null;
+  university?: string | null;
+  major?: string | null;
 
   role?: {
     id: string;
     name: string;
   } | null;
 
-  createdBy?: string;
-  isDeleted?: boolean;
-  deletedAt?: boolean | null;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-export interface IJob {
-  id?: string;
-  name: string;
-  skills: ISkill[];
-  company?: {
-    id: string;
-    name: string;
-    logo?: string;
-  };
-  location: string;
-  salary: number;
-  quantity: number;
-  level: string;
-  description: string;
-  startDate: Date;
-  endDate: Date;
-  active: boolean;
-
-  createdBy?: string;
-  isDeleted?: boolean;
-  deletedAt?: boolean | null;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-export interface IResume {
-  id?: string;
-  email: string;
-  userId: string;
-  url: string;
-  status: string;
-  companyId:
-    | string
-    | {
-        id: string;
-        name: string;
-        logo: string;
-      };
-  jobId:
-    | string
-    | {
-        id: string;
-        name: string;
-      };
-  history?: {
-    status: string;
-    updatedAt: Date;
-    updatedBy: { id: string; email: string };
-  }[];
   createdBy?: string;
   isDeleted?: boolean;
   deletedAt?: boolean | null;
@@ -251,18 +172,6 @@ export interface IRole {
   active: boolean;
   permissions: IPermission[] | string[];
 
-  createdBy?: string;
-  isDeleted?: boolean;
-  deletedAt?: boolean | null;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-export interface ISubscribers {
-  id?: string;
-  name?: string;
-  email?: string;
-  skills: string[];
   createdBy?: string;
   isDeleted?: boolean;
   deletedAt?: boolean | null;
@@ -466,4 +375,9 @@ export interface IVNPayPayment {
 
 export interface IResVNPayPayment {
   paymentUrl: string;
+}
+
+export interface IReqChangePassword {
+  oldPassword: string;
+  newPassword: string;
 }

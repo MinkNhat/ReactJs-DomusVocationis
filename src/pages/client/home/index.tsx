@@ -268,7 +268,7 @@ const HomePage = () => {
                 }}
                 bodyStyle={{ padding: 0 }}
                 extra={
-                    <Search placeholder="input search text" onSearch={onSearch} enterButton />
+                    <Search placeholder="Nhập từ khoá" onSearch={onSearch} enterButton />
                 }
             >
                 {loading.posts ? (

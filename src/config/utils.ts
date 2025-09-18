@@ -87,12 +87,54 @@ export const PERIOD_STATUS_LIST = [
 ];
 
 export const PERIOD_SESSION_LIST = [
-  { label: "Sáng", value: "MORNING", color: "#52c41a" },
-  { label: "Trưa", value: "NOON", color: "#faad14" },
-  { label: "Chiều", value: "AFTERNOON", color: "#1890ff" },
-  { label: "Tối", value: "EVENING", color: "#f00ac9" },
-  { label: "Cả ngày", value: "ALL_DAY", color: "#0af0e0" },
-  { label: "Thêm", value: "EXTRA", color: "#722ed1" },
+  {
+    label: "Sáng",
+    value: "MORNING",
+    color: "#52c41a",
+    time: "06:00-10:00",
+    startTime: "06:00",
+    endTime: "10:00",
+  },
+  {
+    label: "Trưa",
+    value: "NOON",
+    color: "#faad14",
+    time: "10:00-14:00",
+    startTime: "10:00",
+    endTime: "14:00",
+  },
+  {
+    label: "Chiều",
+    value: "AFTERNOON",
+    color: "#1890ff",
+    time: "14:00-18:00",
+    startTime: "14:00",
+    endTime: "18:00",
+  },
+  {
+    label: "Tối",
+    value: "EVENING",
+    color: "#f00ac9",
+    time: "18:00-22:00",
+    startTime: "18:00",
+    endTime: "22:00",
+  },
+  {
+    label: "Cả ngày",
+    value: "ALL_DAY",
+    color: "#0af0e0",
+    time: "06:00-22:00",
+    startTime: "06:00",
+    endTime: "22:00",
+  },
+  {
+    label: "Thêm",
+    value: "EXTRA",
+    color: "#722ed1",
+    time: "06:00-22:00",
+    startTime: "06:00",
+    endTime: "22:00",
+  },
 ];
 
 export const PERIOD_DAY_OF_WEEK_LIST = [
@@ -234,7 +276,6 @@ export const getValidDatesInRange = (
 export const groupSessionsBySessionTime = (periodData: IListSessions) => {
   const sessionConfigs: { [key: string]: ISessionConfig } = {};
 
-  // Khởi tạo tất cả sessions với cấu trúc mới
   PERIOD_SESSION_LIST.forEach((session) => {
     sessionConfigs[session.value] = {
       sessionTime: session.value,
@@ -309,7 +350,7 @@ export const POST_TYPE_LIST = [
 
 export const FEE_FREQUENCY_LIST = [
   { label: "Một lần", value: "ONE_TIME", color: "default" },
-  { label: "Mỗi tuần", value: "WEEKLY", color: "green" },
+  { label: "Mỗi tuần", value: "WEEKLY", color: "gold" },
   { label: "Mỗi tháng", value: "MONTHLY", color: "blue" },
   { label: "Mỗi năm", value: "YEARLY", color: "purple" },
 ];
@@ -323,3 +364,24 @@ export const PAYMENT_STATUS_LIST = [
 export function formatCurrency(value: number): string {
   return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 }
+
+export const getActiveMenuFromPath = (pathname: string): string => {
+  const menuMappings = [
+    { pattern: /^\/period(\/.*)?$/, menuKey: "/period" },
+    { pattern: /^\/fee(\/.*)?$/, menuKey: "/fee" },
+    { pattern: /^\/schedule(\/.*)?$/, menuKey: "/schedule" },
+    { pattern: /^\/profile(\/.*)?$/, menuKey: "/profile" },
+    { pattern: /^\/cate\/.*$/, menuKey: "/" },
+    { pattern: /^\/post\/.*$/, menuKey: "/" },
+    { pattern: /^\/$/, menuKey: "/" },
+  ];
+
+  for (const mapping of menuMappings) {
+    if (mapping.pattern.test(pathname)) {
+      return mapping.menuKey;
+    }
+  }
+
+  //default
+  return "/";
+};

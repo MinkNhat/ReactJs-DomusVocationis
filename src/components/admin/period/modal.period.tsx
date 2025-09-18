@@ -153,7 +153,6 @@ const ModalPeriod = (props: IProps) => {
                 if (res.data && res.data.id) {
                     const periodId = res.data.id;
                     const validDates = getValidDatesInRange(startDate, endDate, excludedDaysOfWeek);
-                    console.log(validDates)
                     const sessionPromises: Promise<any>[] = [];
 
                     validDates.forEach(date => {
@@ -168,8 +167,9 @@ const ModalPeriod = (props: IProps) => {
                                         activity: activity.activity,
                                         sessionTime: sessionTime,
                                         period: {
-                                            id: periodId
-                                        }
+                                            id: periodId,
+                                            name: '',
+                                        },
                                     };
                                     sessionPromises.push(callCreateSession(sessionData));
                                 }

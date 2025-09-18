@@ -7,14 +7,14 @@ import { PATTERN_IMAGES_LIST, PERIOD_TYPE_LIST } from '@/config/utils';
 import { useNavigate } from 'react-router-dom';
 import { callFetchOpenPeriod } from '@/config/api';
 import styles from '@/styles/client.module.scss';
-import { useAppSelector } from '@/redux/hooks';
+import { useAppDispatch, useAppSelector } from '@/redux/hooks';
+import { setActiveMenu } from '@/redux/slice/accountSlide';
 
 const { Title, Text } = Typography;
 
 const PeriodPage = () => {
     const [periods, setPeriods] = useState<IPeriod[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
-
     const navigate = useNavigate();
 
     useEffect(() => {

@@ -1,9 +1,9 @@
 import { Tabs } from 'antd';
 import type { TabsProps } from 'antd';
-import JobPage from './job';
 import Access from '@/components/share/access';
 import { ALL_PERMISSIONS } from '@/config/permissions';
 import FeeTypePage from './fee-type';
+import PaymentHistoryPage from './payment-history.tabs';
 
 const FeeTabs = () => {
     const onChange = (key: string) => {
@@ -14,7 +14,7 @@ const FeeTabs = () => {
         {
             key: '1',
             label: 'Các Thanh toán',
-            children: <JobPage />,
+            children: <PaymentHistoryPage />,
         },
         {
             key: '2',

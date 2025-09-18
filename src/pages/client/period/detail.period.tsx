@@ -11,6 +11,8 @@ import dayjs from 'dayjs';
 import { FORMATE_DATE_VN, PERIOD_SESSION_LIST, PERIOD_STATUS_LIST } from "@/config/utils";
 import RegistrationModal from "./modal.period";
 import NotFound from "@/components/share/not.found";
+import { useSelector } from "react-redux";
+import { useAppSelector } from "@/redux/hooks";
 
 const { Title, Text } = Typography;
 
@@ -58,7 +60,7 @@ const ClientPeriodDetailPage = (props: any) => {
     const [periodDetail, setPeriodDetail] = useState<IPeriod | null>(null);
     const [listSession, setListSession] = useState<IListSessions | null>(null);
     const [selectedDaySessions, setSelectedDaySessions] = useState<SessionData[] | null>(null);
-    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
     const [openModal, setOpenModal] = useState<boolean>(false);
     const { id } = useParams<{ id: string }>();
     const calendarRef = useRef<FullCalendar | null>(null);
@@ -83,14 +85,10 @@ const ClientPeriodDetailPage = (props: any) => {
     }
 
     const fetchListSession = async (id: string) => {
-        setIsLoading(true)
-
         const res = await callFetchSessionsByPeriod(id);
         if (res?.data) {
             setListSession(res.data);
         }
-
-        setIsLoading(false)
     }
 
     const getCalendarEvents = (): CalendarEvent[] => {
@@ -180,7 +178,6 @@ const ClientPeriodDetailPage = (props: any) => {
                 }
             });
         });
-        console.log(events);
         return events;
     };
 
@@ -225,8 +222,8 @@ const ClientPeriodDetailPage = (props: any) => {
         }, 100);
     };
 
-    if (!periodDetail) {
-        return <NotFound />
+    if (!isLoading) {
+        if (!periodDetail) return <NotFound />
     }
 
     return (
