@@ -16,12 +16,14 @@ import {
     Carousel,
     Flex,
     Space,
-    GetProps
+    GetProps,
+    Tag
 } from 'antd';
 import {
     PlusOutlined,
     UserOutlined,
-    ClockCircleOutlined
+    ClockCircleOutlined,
+    HourglassOutlined
 } from '@ant-design/icons';
 import styles from '@/styles/client.module.scss';
 import { ICategory, IPost } from '@/types/backend';
@@ -29,9 +31,10 @@ import { callFetchCategory, callFetchPost } from '@/config/api';
 import { sfEqual, sfLike } from "spring-filter-query-builder";
 import dayjs from 'dayjs';
 import relativeTime from "dayjs/plugin/relativeTime";
-import { getRelativeTime } from '@/config/utils';
+import { getNowUTC, getRelativeTime } from '@/config/utils';
 import { useAppSelector } from '@/redux/hooks';
-import PostModal from './modal.home';
+import AnnouncementModal from './modal.announcement';
+import SurveyModal from './modal.survey';
 import { useNavigate, useParams } from 'react-router-dom';
 
 dayjs.extend(relativeTime);
@@ -58,10 +61,10 @@ const HomePage = () => {
         posts: false,
         initializing: true
     });
-    const [openModal, setOpenModal] = useState<boolean>(false);
+    const [openAnnouncementModal, setOpenAnnouncementModal] = useState<boolean>(false);
+    const [openSurveyModal, setOpenSurveyModal] = useState<boolean>(false);
     const navigate = useNavigate();
     const { id: cateId } = useParams<{ id: string }>();
-    const [postType, setPostType] = useState<"ANNOUNCEMENT" | "SURVEY" | undefined>("ANNOUNCEMENT");
     const isAuthenticated = useAppSelector(state => state.account.isAuthenticated);
     const userRole = useAppSelector(state => state.account.user).role?.name;
 
@@ -69,17 +72,17 @@ const HomePage = () => {
         {
             id: 1,
             url: 'https://cdn.pixabay.com/photo/2018/08/04/11/30/draw-3583548_1280.png',
-            title: 'Chào mừng đến với diễn đàn'
+            title: ''
         },
         {
             id: 2,
             url: 'https://png.pngtree.com/thumb_back/fh260/background/20240522/pngtree-abstract-cloudy-background-beautiful-natural-streaks-of-sky-and-clouds-red-image_15684333.jpg',
-            title: 'Cập nhật mới nhất'
+            title: ''
         },
         {
             id: 3,
             url: 'https://media.istockphoto.com/id/843408508/photo/photography-camera-lens-concept.jpg?s=612x612&w=0&k=20&c=-tm5TKrPDMakrT1vcOE-4Rlyj-iBVdzKuX4viFkd7Vo=',
-            title: 'Tham gia cộng đồng'
+            title: ''
         }
     ];
 
@@ -87,8 +90,6 @@ const HomePage = () => {
         fetchCategory();
     }, []);
 
-
-    //check
     useEffect(() => {
         if (categories.length > 0) {
             if (cateId) {
@@ -100,7 +101,7 @@ const HomePage = () => {
                     navigate('/', { replace: true });
                 }
             } else {
-                setSelectedCategory(null);
+                setSelectedCategory(null); //show carousel
             }
             setLoading(prev => ({ ...prev, initializing: false }));
         }
@@ -286,6 +287,18 @@ const HomePage = () => {
                         <List
                             dataSource={posts}
                             renderItem={(post) => {
+                                let isExpired = true;
+                                const now = dayjs();
+
+                                if (post.type === "SURVEY") {
+                                    if (post.expiresAt !== null) {
+                                        if (dayjs(post.expiresAt).isAfter(now)) {
+                                            isExpired = false;
+                                        }
+                                    }
+                                }
+
+
                                 const itemContent = (
                                     <List.Item
                                         style={{
@@ -318,23 +331,49 @@ const HomePage = () => {
                                                         ellipsis
                                                     >
                                                         {post.title}
+                                                        {post.type === "SURVEY" && <Tag color="gold" style={{ marginLeft: '8px' }}>Khảo sát</Tag>}
                                                     </Title>
                                                 </div>
                                             }
                                             description={
-                                                <div style={{ display: 'flex', alignItems: 'center', fontSize: '13px', marginTop: 4 }}>
-                                                    <Text type="secondary" style={{ display: 'flex', alignItems: 'center' }}>
-                                                        <UserOutlined style={{ marginRight: 4 }} />
-                                                        {post.user?.full_name || 'Unknown'}
-                                                    </Text>
+                                                <>
+                                                    <div style={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        fontSize: '13px',
+                                                        marginTop: 4,
+                                                        justifyContent: 'space-between',
+                                                        width: '100%'
+                                                    }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                                                            <Text type="secondary" style={{ display: 'flex', alignItems: 'center' }}>
+                                                                <UserOutlined style={{ marginRight: 4 }} />
+                                                                {post.user?.full_name || 'Unknown'}
+                                                            </Text>
 
-                                                    <Text type="secondary" style={{ margin: '0 8px' }}>•</Text>
+                                                            <Text type="secondary" style={{ margin: '0 8px' }}>•</Text>
 
-                                                    <Text type="secondary" style={{ display: 'flex', alignItems: 'center' }}>
-                                                        <ClockCircleOutlined style={{ marginRight: 4 }} />
-                                                        {getRelativeTime(post.createdAt)}
-                                                    </Text>
-                                                </div>
+                                                            <Text type="secondary" style={{ display: 'flex', alignItems: 'center' }}>
+                                                                <ClockCircleOutlined style={{ marginRight: 4 }} />
+                                                                {getRelativeTime(post.createdAt)}
+                                                            </Text>
+                                                        </div>
+
+                                                        <div>
+                                                            {post.type === "SURVEY" && !isExpired ? (
+                                                                <Text type="danger" style={{ display: 'flex', alignItems: 'center' }}>
+                                                                    <HourglassOutlined style={{ marginRight: 4 }} />
+                                                                    {dayjs(post.expiresAt).format("HH:mm DD/MM/YYYY")}
+                                                                </Text>
+                                                            )
+                                                                :
+                                                                (<Text type="secondary" style={{ display: 'flex', alignItems: 'center' }}>
+                                                                    {post.expiresAt !== null ? "Hết hạn khảo sát" : ""}
+                                                                </Text>)}
+                                                        </div>
+                                                    </div>
+                                                </>
+
                                             }
                                         />
                                     </List.Item>
@@ -402,28 +441,20 @@ const HomePage = () => {
 
                     {isAuthenticated && (
                         <Space size="large">
-                            {
-                                userRole !== undefined && (
-                                    <Button
-                                        type="primary"
-                                        icon={<PlusOutlined />}
-                                        onClick={() => {
-                                            setOpenModal(true);
-                                            setPostType("SURVEY");
-                                        }}
-                                    >
-                                        Tạo bài khảo sát mới
-                                    </Button>
-                                )
-                            }
+                            {userRole !== undefined && (
+                                <Button
+                                    type="primary"
+                                    icon={<PlusOutlined />}
+                                    onClick={() => setOpenSurveyModal(true)}
+                                >
+                                    Tạo bài khảo sát mới
+                                </Button>
+                            )}
 
                             <Button
                                 type="primary"
                                 icon={<PlusOutlined />}
-                                onClick={() => {
-                                    setOpenModal(true);
-                                    setPostType("ANNOUNCEMENT");
-                                }}
+                                onClick={() => setOpenAnnouncementModal(true)}
                             >
                                 Tạo bài viết mới
                             </Button>
@@ -443,12 +474,15 @@ const HomePage = () => {
                     </Col>
                 </Row>
 
-                <PostModal
-                    openModal={openModal}
-                    setOpenModal={setOpenModal}
-                    // dataInit={null}
-                    // setDataInit={() => { }}
-                    postType={postType}
+                <AnnouncementModal
+                    openModal={openAnnouncementModal}
+                    setOpenModal={setOpenAnnouncementModal}
+                    onSuccess={handleCreatedPostSuccess}
+                />
+
+                <SurveyModal
+                    openModal={openSurveyModal}
+                    setOpenModal={setOpenSurveyModal}
                     onSuccess={handleCreatedPostSuccess}
                 />
             </Content>

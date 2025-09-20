@@ -7,8 +7,6 @@ import { PATTERN_IMAGES_LIST, PERIOD_TYPE_LIST } from '@/config/utils';
 import { useNavigate } from 'react-router-dom';
 import { callFetchOpenPeriod } from '@/config/api';
 import styles from '@/styles/client.module.scss';
-import { useAppDispatch, useAppSelector } from '@/redux/hooks';
-import { setActiveMenu } from '@/redux/slice/accountSlide';
 
 const { Title, Text } = Typography;
 

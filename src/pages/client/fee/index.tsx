@@ -175,8 +175,8 @@ const FeePage = () => {
                         key: '2',
                         label: 'Lịch sử thanh toán',
                         children: <PaymentTab
-                            key={activeTab} // Force re-render when tab changes
-                            reloadPayments={fetchRegisteredFees} // Optional: có thể pass callback nếu cần
+                            key={activeTab}
+                            reloadPayments={fetchRegisteredFees}
                         />,
                     },
 

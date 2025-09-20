@@ -18,6 +18,7 @@ import {
     Alert,
     Progress,
     App,
+    Breadcrumb,
 } from "antd";
 import {
     EditOutlined,
@@ -33,7 +34,9 @@ import { IPost, IQuestion, IOption, IAnswer } from "@/types/backend";
 import NotFound from "@/components/share/not.found";
 import { getRelativeTime } from "@/config/utils";
 import { useAppSelector } from "@/redux/hooks";
-import PostModal from "./modal.home";
+// import PostModal from "./modal.home";
+import styles from '@/styles/client.module.scss';
+import AnnouncementModal from "./modal.announcement";
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -81,7 +84,7 @@ const ClientPostPageDetail: React.FC = () => {
                 // Check if user already submitted survey
                 // checkSurveySubmission(postId);
             }
-            console.log(postDetail);
+            // console.log(postDetail);
         } catch (error) {
             message.error("Không thể tải chi tiết bài viết");
         } finally {
@@ -378,12 +381,21 @@ const ClientPostPageDetail: React.FC = () => {
                 <Card>
                     {/* Header */}
                     <div>
-                        <Space>
-                            <RightOutlined />
-                            <Text>{postDetail.category.name}</Text>
-                            <RightOutlined />
-                            <Text>{postDetail.title}</Text>
-                        </Space>
+                        <Breadcrumb
+                            separator=">"
+                            className={styles["home-section"]}
+                            items={[
+                                {
+                                    title: <Text>{postDetail.category.name}</Text>,
+                                    onClick: () => { navigate(`/cate/${postDetail.category.id}`) },
+                                    className: `${styles["pointer-item"]}`
+
+                                },
+                                {
+                                    title: <Text>{postDetail.title}</Text>,
+                                },
+                            ]}
+                        />
 
                         <Flex justify="space-between" style={{ marginBottom: "16px", marginTop: '16px' }}>
                             {postDetail.user && (
@@ -522,13 +534,13 @@ const ClientPostPageDetail: React.FC = () => {
                     )}
                 </Card>
 
-                <PostModal
+                <AnnouncementModal
                     openModal={openUpdateModal}
                     setOpenModal={setOpenUpdateModal}
                     dataInit={postDetail}
-                    setDataInit={setPostDetail}
+                    // setDataInit={setPostDetail}
                     onSuccess={() => {
-                        if (id) fetchPostDetail(id);
+                        if (id) fetchPostDetail(id)
                     }}
                 />
             </div>

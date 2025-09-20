@@ -69,9 +69,9 @@ const ImportUser = (props: IProps) => {
                         })
 
                         // set id -> avoid warning
-                        jsonData.map((item, index) => {
-                            item.id = index.toString();
-                        })
+                        // jsonData.map((item, index) => {
+                        //     item.id = index.toString();
+                        // })
                     });
 
                     setDataImport(jsonData);
@@ -206,6 +206,8 @@ const ImportUser = (props: IProps) => {
             ...item,
             password: import.meta.env.VITE_USER_CREATE_DEFAULT_PASSWORD
         }))
+
+        console.log(dataSubmit);
 
         const res = await callBulkCreateUser(dataSubmit);
         if (res.data) {

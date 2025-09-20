@@ -165,36 +165,44 @@ const FeeTypePage = () => {
             width: 50,
             render: (_value, entity, _index, _action) => (
                 <Space>
-
-                    <EditOutlined
-                        style={{
-                            fontSize: 20,
-                            color: '#ffa500',
-                        }}
-                        type=""
-                        onClick={() => {
-                            setOpenModal(true);
-                            setDataInit(entity);
-                        }}
-                    />
-
-                    <Popconfirm
-                        placement="leftTop"
-                        title={"Xác nhận xóa loại chi phí"}
-                        description={"Bạn có chắc chắn muốn xóa loại chi phí này ?"}
-                        onConfirm={() => handleDeleteFeeType(entity.id)}
-                        okText="Xác nhận"
-                        cancelText="Hủy"
+                    < Access
+                        permission={ALL_PERMISSIONS.FEE_TYPES.UPDATE}
+                        hideChildren
                     >
-                        <span style={{ cursor: "pointer", margin: "0 10px" }}>
-                            <DeleteOutlined
-                                style={{
-                                    fontSize: 20,
-                                    color: '#ff4d4f',
-                                }}
-                            />
-                        </span>
-                    </Popconfirm>
+                        <EditOutlined
+                            style={{
+                                fontSize: 20,
+                                color: '#ffa500',
+                            }}
+                            type=""
+                            onClick={() => {
+                                setOpenModal(true);
+                                setDataInit(entity);
+                            }}
+                        />
+                    </Access >
+                    <Access
+                        permission={ALL_PERMISSIONS.FEE_TYPES.DELETE}
+                        hideChildren
+                    >
+                        <Popconfirm
+                            placement="leftTop"
+                            title={"Xác nhận xóa loại phí"}
+                            description={"Bạn có chắc chắn muốn xóa loại phí này ?"}
+                            onConfirm={() => handleDeleteFeeType(entity.id)}
+                            okText="Xác nhận"
+                            cancelText="Hủy"
+                        >
+                            <span style={{ cursor: "pointer", margin: "0 10px" }}>
+                                <DeleteOutlined
+                                    style={{
+                                        fontSize: 20,
+                                        color: '#ff4d4f',
+                                    }}
+                                />
+                            </span>
+                        </Popconfirm>
+                    </Access>
                 </Space>
             ),
 

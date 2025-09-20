@@ -23,7 +23,6 @@ import { isMobile } from 'react-device-detect';
 import type { MenuProps } from 'antd';
 import { setActiveMenu, setLogoutAction } from '@/redux/slice/accountSlide';
 import styles from '@/styles/client.module.scss';
-import ManageAccount from './modal/manage.account';
 import { getActiveMenuFromPath } from '@/config/utils';
 
 const { Sider, Content, Footer } = Layout;

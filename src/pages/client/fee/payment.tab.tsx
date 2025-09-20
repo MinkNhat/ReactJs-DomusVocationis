@@ -2,20 +2,20 @@ import { callFetchPaymentsByUser, callVNPayPayment } from "@/config/api";
 import { FEE_FREQUENCY_LIST, formatCurrency, FORMATE_DATE_TIME_VN, FORMATE_DATE_VN, PAYMENT_STATUS_LIST } from "@/config/utils";
 import { useAppSelector } from "@/redux/hooks";
 import { IFeeType, IPayment, IRegistrationFee } from "@/types/backend";
-import { DeleteOutlined, EyeOutlined } from "@ant-design/icons";
 import { Badge, Button, Card, message, Select, Space, Table, Tag, Typography } from "antd";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { sfEqual } from "spring-filter-query-builder";
 
 const { Title, Text } = Typography;
 
-// interface IProps {
-//     reloadPayments?: () => void;
-// }
+interface IProps {
+    reloadPayments?: () => void;
+}
 
-const PaymentTab = () => {
+const PaymentTab: React.FC<IProps> = ({
+    reloadPayments,
+}) => {
     const [payments, setPayments] = useState<IPayment[]>([]);
     const [loading, setLoading] = useState(false);
     const userId = useAppSelector(state => state.account.user).id;
@@ -135,9 +135,9 @@ const PaymentTab = () => {
                     type="link"
                     onClick={() => handlePayment(record)}
                     size="small"
-                    disabled={record.status === 'SUCCESS'} // Disable nếu đã thanh toán
+                    disabled={record.status === 'COMPLETED'}
                 >
-                    {record.status === 'SUCCESS' ? 'Đã thanh toán' : 'Thanh toán'}
+                    {record.status === 'COMPLETED' ? 'Đã thanh toán' : 'Thanh toán'}
                 </Button>
             ),
         },

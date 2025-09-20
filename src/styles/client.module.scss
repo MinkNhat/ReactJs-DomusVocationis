@@ -117,3 +117,14 @@
         justify-content: space-between;
     }
 }
+
+.home-section {
+    .pointer-item {
+        cursor: pointer;
+        padding: 3px;
+    }
+
+    .pointer-item:hover {
+        background-color: #f2f2f2;
+    }
+}
