@@ -14,7 +14,9 @@ import {
     Checkbox,
     Tooltip,
     Popconfirm,
-    Segmented
+    Segmented,
+    TimePicker,
+    DatePicker
 } from 'antd';
 import {
     PlusOutlined,
@@ -28,6 +30,7 @@ import { callCreateSurveyBulk, callFetchCategory } from '@/config/api';
 import TextArea from 'antd/es/input/TextArea';
 import { sfEqual } from "spring-filter-query-builder";
 import { useAppSelector } from '@/redux/hooks';
+import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
 
@@ -97,24 +100,6 @@ const SurveyModal: React.FC<IProps> = ({
                 publicPost: dataInit.publicPost,
                 categoryId: dataInit.category?.id
             });
-
-            // Load questions if updating
-            if (dataInit.questions) {
-                const formattedQuestions: IQuestionForm[] = dataInit.questions.map(q => ({
-                    id: q.id,
-                    questionText: q.questionText,
-                    type: q.type,
-                    required: q.required,
-                    allowMultiple: q.allowMultiple || false,
-                    orderDisplay: q.orderDisplay,
-                    options: q.options?.map(opt => ({
-                        id: opt.id,
-                        optionText: opt.optionText,
-                        orderDisplay: opt.orderDisplay
-                    })) || []
-                }));
-                setQuestions(formattedQuestions);
-            }
         }
     }, [dataInit]);
 
@@ -129,7 +114,6 @@ const SurveyModal: React.FC<IProps> = ({
     }
 
     const handleNextStep = async () => {
-        // Validate step 1 data
         if (!formData.title?.trim()) {
             notification.error({
                 message: 'Thiếu thông tin',
@@ -154,7 +138,6 @@ const SurveyModal: React.FC<IProps> = ({
             return;
         }
 
-        console.log('Step 1 values saved:', formData);
         setCurrentStep(1);
     };
 
@@ -179,7 +162,6 @@ const SurveyModal: React.FC<IProps> = ({
 
     const removeQuestion = (index: number) => {
         const newQuestions = questions.filter((_, i) => i !== index);
-        // Reorder remaining questions
         const reorderedQuestions = newQuestions.map((q, i) => ({
             ...q,
             orderDisplay: i + 1
@@ -240,6 +222,14 @@ const SurveyModal: React.FC<IProps> = ({
     };
 
     const validateSurveyData = () => {
+        if (formData.expiresAt === undefined) {
+            notification.error({
+                message: 'Lỗi khi tạo bài khảo sát',
+                description: 'Vui lòng chọn thời điểm kết thúc khảo sát'
+            });
+            return false;
+        }
+
         if (questions.length === 0) {
             notification.error({
                 message: 'Lỗi khi tạo bài khảo sát',
@@ -295,8 +285,10 @@ const SurveyModal: React.FC<IProps> = ({
                 content: formData.content,
                 type: 'SURVEY',
                 status: 'PUBLISHED',
+                expiresAt: formData.expiresAt,
                 publicPost: formData.publicPost,
                 categoryId: formData.categoryId,
+
                 questions: questions.map((q, index) => ({
                     questionText: q.questionText,
                     type: q.type,
@@ -403,9 +395,15 @@ const SurveyModal: React.FC<IProps> = ({
         return (
             <div>
                 <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Title level={5} style={{ margin: 0 }}>
-                        Danh sách câu hỏi ({questions.length})
-                    </Title>
+                    <div>
+                        <DatePicker
+                            showTime
+                            showHour
+                            showMinute
+                            placeholder='Thời điểm kết thúc'
+                            onChange={(value) => setFormData((prev: any) => ({ ...prev, expiresAt: value.toISOString() }))}
+                        />
+                    </div>
                     <Button
                         type="primary"
                         icon={<PlusOutlined />}
@@ -523,7 +521,7 @@ const SurveyModal: React.FC<IProps> = ({
 
                 {questions.length === 0 && (
                     <div style={{ textAlign: 'center', padding: 40, color: '#999' }}>
-                        <QuestionCircleOutlined style={{ fontSize: 48, marginBottom: 16 }} />
+                        <QuestionCircleOutlined style={{ fontSize: 32, marginBottom: 16 }} />
                         <div>Chưa có câu hỏi nào</div>
                     </div>
                 )}

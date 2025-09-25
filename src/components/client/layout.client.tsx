@@ -14,7 +14,7 @@ import {
     FileTextOutlined,
     SettingOutlined,
 } from '@ant-design/icons';
-import { Layout, Menu, Dropdown, Space, message, Avatar, Button, theme } from 'antd';
+import { Layout, Menu, Dropdown, Space, message, Avatar, Button, theme, Image } from 'antd';
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Link } from 'react-router-dom';
 import { callLogout } from 'config/api';
@@ -24,6 +24,7 @@ import type { MenuProps } from 'antd';
 import { setActiveMenu, setLogoutAction } from '@/redux/slice/accountSlide';
 import styles from '@/styles/client.module.scss';
 import { getActiveMenuFromPath } from '@/config/utils';
+import logo from '@/assets/logoTVB.png';
 
 const { Sider, Content, Footer } = Layout;
 
@@ -141,8 +142,21 @@ const LayoutClient = () => {
                         collapsible
                         collapsed={collapsed}
                         onCollapse={(value) => setCollapsed(value)}>
-                        <div style={{ height: 32, margin: 16, textAlign: 'center' }}>
-                            <HomeFilled /> HOME
+                        <div style={{
+                            marginTop: '16px',
+                            textAlign: 'center',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center'
+                        }}>
+                            <img
+                                src={logo}
+                                alt="Logo"
+                                style={{
+                                    maxHeight: '80px',
+                                    objectFit: 'contain',
+                                }}
+                            />
                         </div>
                         <Menu
                             selectedKeys={[activeMenu]}
@@ -193,7 +207,7 @@ const LayoutClient = () => {
                         <Outlet />
                     </Content>
                     <Footer style={{ padding: 10, textAlign: 'center', backgroundColor: "#222831" }}>
-                        <span style={{ color: "white" }}>Nguyen Minh Nhat &copy; 2025 <HeartTwoTone /></span>
+                        <span style={{ color: "white" }}> 2025 <HeartTwoTone /></span>
                     </Footer>
                 </Layout>
             </Layout>

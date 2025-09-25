@@ -71,19 +71,69 @@ const HomePage = () => {
     const carouselImages = [
         {
             id: 1,
-            url: 'https://cdn.pixabay.com/photo/2018/08/04/11/30/draw-3583548_1280.png',
+            url: 'https://res.cloudinary.com/dbmwgavqz/image/upload/v1758557627/d9ba0c389a774b291266_ikfinz.png',
             title: ''
         },
         {
             id: 2,
-            url: 'https://png.pngtree.com/thumb_back/fh260/background/20240522/pngtree-abstract-cloudy-background-beautiful-natural-streaks-of-sky-and-clouds-red-image_15684333.jpg',
+            url: 'https://res.cloudinary.com/dbmwgavqz/image/upload/v1758557625/IMG_4985_x2qmdj.jpg',
             title: ''
         },
         {
             id: 3,
-            url: 'https://media.istockphoto.com/id/843408508/photo/photography-camera-lens-concept.jpg?s=612x612&w=0&k=20&c=-tm5TKrPDMakrT1vcOE-4Rlyj-iBVdzKuX4viFkd7Vo=',
+            url: 'https://res.cloudinary.com/dbmwgavqz/image/upload/v1758557628/IMG_9790_axe3ob.jpg',
             title: ''
-        }
+        },
+        {
+            id: 4,
+            url: 'https://res.cloudinary.com/dbmwgavqz/image/upload/v1758557628/IMG_9089_2_dndaci.jpg',
+            title: ''
+        },
+        {
+            id: 5,
+            url: 'https://res.cloudinary.com/dbmwgavqz/image/upload/v1758557627/IMG_5180_krjkdj.jpg',
+            title: ''
+        },
+        {
+            id: 6,
+            url: 'https://res.cloudinary.com/dbmwgavqz/image/upload/v1758557627/IMG_4989_nkq9xb.jpg',
+            title: ''
+        },
+        {
+            id: 7,
+            url: 'https://res.cloudinary.com/dbmwgavqz/image/upload/v1758557627/IMG_9721_o9oyj9.jpg',
+            title: ''
+        },
+        {
+            id: 8,
+            url: 'https://res.cloudinary.com/dbmwgavqz/image/upload/v1758557627/IMG_2938_snogap.jpg',
+            title: ''
+        },
+        {
+            id: 9,
+            url: 'https://res.cloudinary.com/dbmwgavqz/image/upload/v1758557626/IMG_6106_re82as.jpg',
+            title: ''
+        },
+        {
+            id: 10,
+            url: 'https://res.cloudinary.com/dbmwgavqz/image/upload/v1758557627/IMG_2420_nhuynr.jpg',
+            title: ''
+        },
+        {
+            id: 11,
+            url: 'https://res.cloudinary.com/dbmwgavqz/image/upload/v1758557626/IMG_1052_rq9okg.jpg',
+            title: ''
+        },
+        {
+            id: 12,
+            url: 'https://res.cloudinary.com/dbmwgavqz/image/upload/v1758557626/e780cc5a5a158b4bd204_v1hdr3.png',
+            title: ''
+        },
+        {
+            id: 13,
+            url: 'https://res.cloudinary.com/dbmwgavqz/image/upload/v1758557625/IMG_7227_elg5jd.jpg',
+            title: ''
+        },
     ];
 
     useEffect(() => {
@@ -215,7 +265,7 @@ const HomePage = () => {
     );
 
     const renderPostList = () => {
-        if (!selectedCategory) {
+        if (!selectedCategory && !loading.initializing) {
             return (
                 <Card style={{ height: '100%', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
                     <Carousel

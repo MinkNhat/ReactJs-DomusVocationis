@@ -15,8 +15,6 @@ import {
     Popconfirm,
     Radio,
     Checkbox,
-    Alert,
-    Progress,
     App,
     Breadcrumb,
 } from "antd";
@@ -25,9 +23,11 @@ import {
     DeleteOutlined,
     UserOutlined,
     MessageOutlined,
-    RightOutlined,
     CheckCircleOutlined,
     FormOutlined,
+    ExceptionOutlined,
+    HourglassOutlined,
+    ProjectOutlined,
 } from "@ant-design/icons";
 import { callCreateAnswer, callDeletePost, callFetchPostById } from "@/config/api";
 import { IPost, IQuestion, IOption, IAnswer } from "@/types/backend";
@@ -37,6 +37,8 @@ import { useAppSelector } from "@/redux/hooks";
 // import PostModal from "./modal.home";
 import styles from '@/styles/client.module.scss';
 import AnnouncementModal from "./modal.announcement";
+import dayjs from "dayjs";
+import SurveyResultsModal from "./modal.survey-chart";
 
 const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
@@ -53,27 +55,37 @@ const ClientPostPageDetail: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const [postDetail, setPostDetail] = useState<IPost | null>(null);
-    const [loading, setLoading] = useState<boolean>(true);
-    const [openUpdateModal, setOpenUpdateModal] = useState<boolean>(false);
-    const [comments, setComments] = useState<CommentData[]>([]);
-    const [commentLoading, setCommentLoading] = useState<boolean>(false);
-    const [commentForm] = Form.useForm();
-    const [surveyForm] = Form.useForm();
+    const [loading, setLoading] = useState(true);
     const { message, notification } = App.useApp();
+    const user = useAppSelector(state => state.account.user);
 
+    const [openUpdateModal, setOpenUpdateModal] = useState(false);
+    const [openSurveyResult, setOpenSurveyResult] = useState(false);
 
-    // Survey states
-    // const [surveyAnswers, setSurveyAnswers] = useState<IAnswer[]>([]);
-    // const [surveySubmitted, setSurveySubmitted] = useState<boolean>(false);
+    const [surveyForm] = Form.useForm();
     const [surveyLoading, setSurveyLoading] = useState<boolean>(false);
 
-    const userEmail = useAppSelector(state => state.account.user).email;
+    const [commentForm] = Form.useForm();
+    const [comments, setComments] = useState<CommentData[]>([]);
+    const [commentLoading, setCommentLoading] = useState(false);
 
     useEffect(() => {
         if (id) {
             fetchPostDetail(id);
         }
-    }, [id]);
+
+        const savedAnswers = localStorage.getItem('answers');
+        if (savedAnswers) {
+            try {
+                const parsedAnswers = JSON.parse(savedAnswers);
+                surveyForm.setFieldsValue(parsedAnswers);
+
+                localStorage.removeItem('answers');
+            } catch (error) {
+                localStorage.removeItem('answers');
+            }
+        }
+    }, [id, surveyForm]);
 
     const fetchPostDetail = async (postId: string) => {
         setLoading(true);
@@ -81,10 +93,7 @@ const ClientPostPageDetail: React.FC = () => {
             const res = await callFetchPostById(postId);
             if (res && res.data) {
                 setPostDetail(res.data);
-                // Check if user already submitted survey
-                // checkSurveySubmission(postId);
             }
-            // console.log(postDetail);
         } catch (error) {
             message.error("Không thể tải chi tiết bài viết");
         } finally {
@@ -92,14 +101,7 @@ const ClientPostPageDetail: React.FC = () => {
         }
     };
 
-    const checkSurveySubmission = async (postId: string) => {
-        // TODO: Implement API call to check if user already submitted
-        // For now, check localStorage as a temporary solution
-        const submitted = localStorage.getItem(`survey_${postId}_${userEmail}`);
-        // setSurveySubmitted(!!submitted);
-    };
-
-    const handleDelete = async (): Promise<void> => {
+    const handleDelete = async () => {
         if (id) {
             let res = await callDeletePost(id);
             if (res.statusCode === 200) {
@@ -111,11 +113,17 @@ const ClientPostPageDetail: React.FC = () => {
         }
     };
 
-    const handleComment = async (values: { comment: string }): Promise<void> => {
-        // Implementation for comments
+    const handleComment = async (values: { comment: string }) => {
+
     };
 
     const handleSurveySubmit = async (values: any) => {
+        if (user.id === '') {
+            localStorage.setItem('answers', JSON.stringify(values));
+            navigate(`/login?callback=/post/${id}`);
+            return;
+        }
+
         setSurveyLoading(true);
         try {
             const answers: IAnswer[] = [];
@@ -124,16 +132,32 @@ const ClientPostPageDetail: React.FC = () => {
                 const fieldValue = values[`question_${question.id}`];
 
                 if (question.type === 'MULTIPLE_CHOICE') {
-                    if (fieldValue && fieldValue.length > 0) {
-                        answers.push({
-                            question: {
-                                id: question.id!
-                            },
-                            selectedOptions: fieldValue.map((optionId: string) => ({ id: optionId }))
-                        });
+                    if (fieldValue) {
+                        let selectedOptions: string[] = [];
+
+                        if (question.allowMultiple) {
+                            if (Array.isArray(fieldValue) && fieldValue.length > 0) {
+                                selectedOptions = fieldValue;
+                            }
+                        } else {
+                            if (typeof fieldValue === 'string') {
+                                selectedOptions = [fieldValue];
+                            }
+                            // else if (Array.isArray(fieldValue) && fieldValue.length > 0) {
+                            //     selectedOptions = fieldValue;
+                            // }
+                        }
+
+                        if (selectedOptions.length > 0) {
+                            answers.push({
+                                question: {
+                                    id: question.id!
+                                },
+                                selectedOptions: selectedOptions.map((optionId: string) => ({ id: optionId }))
+                            });
+                        }
                     }
                 } else if (question.type === 'TEXT') {
-                    // Text answer
                     if (fieldValue && fieldValue.trim()) {
                         answers.push({
                             question: {
@@ -145,15 +169,13 @@ const ClientPostPageDetail: React.FC = () => {
                 }
             });
 
-            // TODO: Call API to submit survey
             const result = await Promise.allSettled(answers.map(ans => callCreateAnswer(ans)));
-            // console.log(result);
             const success = result.filter(r => r.status === 'fulfilled' && r.value.statusCode === 201);
+
             if (success.length === answers.length) {
                 message.success("Gửi khảo sát thành công!");
+                surveyForm.resetFields();
                 if (id) fetchPostDetail(id);
-                // setSurveyAnswers(answers);
-                // setSurveySubmitted(true);
             } else {
                 result.forEach(r => {
                     if (r.status === 'fulfilled' && r.value.statusCode === 400) {
@@ -230,7 +252,7 @@ const ClientPostPageDetail: React.FC = () => {
                                         .map((option: IOption) => (
                                             <Radio
                                                 key={option.id}
-                                                value={[option.id]}
+                                                value={option.id}
                                                 style={{
                                                     padding: '8px 12px',
                                                     border: '1px solid #d9d9d9',
@@ -256,10 +278,6 @@ const ClientPostPageDetail: React.FC = () => {
                                 required: isRequired,
                                 message: 'Vui lòng nhập câu trả lời'
                             },
-                            {
-                                min: 10,
-                                message: 'Câu trả lời phải có ít nhất 10 ký tự'
-                            }
                         ]}
                     >
                         <TextArea
@@ -279,10 +297,6 @@ const ClientPostPageDetail: React.FC = () => {
         if (!postDetail?.questions || postDetail.questions.length === 0) {
             return null;
         }
-        // console.log(postDetail)
-
-        const totalQuestions = postDetail.questions.length;
-        const requiredQuestions = postDetail.questions.filter((q: IQuestion) => q.required).length;
 
         if (postDetail.submitted) {
             return (
@@ -290,7 +304,7 @@ const ClientPostPageDetail: React.FC = () => {
                     <div style={{ textAlign: 'center', padding: '24px 0' }}>
                         <CheckCircleOutlined
                             style={{
-                                fontSize: '64px',
+                                fontSize: '32px',
                                 color: '#52c41a',
                                 marginBottom: '16px'
                             }}
@@ -306,6 +320,28 @@ const ClientPostPageDetail: React.FC = () => {
             );
         }
 
+        if (dayjs(postDetail.expiresAt).isBefore(dayjs())) {
+            return (
+                <Card style={{ marginTop: '24px' }}>
+                    <div style={{ textAlign: 'center', padding: '24px 0' }}>
+                        <ExceptionOutlined
+                            style={{
+                                fontSize: '32px',
+                                color: '#FFB300',
+                                marginBottom: '16px'
+                            }}
+                        />
+                        <Title level={4} style={{ color: '#FFB300', marginBottom: '8px' }}>
+                            Bài khảo sát đã hết hạn!
+                        </Title>
+                        <Text type="secondary">
+                            Bài khảo sát đã ngừng nhận câu trả lời.
+                        </Text>
+                    </div>
+                </Card>
+            )
+        }
+
         return (
             <Card
                 title={
@@ -314,24 +350,14 @@ const ClientPostPageDetail: React.FC = () => {
                         Khảo sát
                     </div>
                 }
+                extra={
+                    <div style={{ color: "red" }}>
+                        <HourglassOutlined style={{ marginRight: '8px' }} />
+                        {dayjs(postDetail.expiresAt).format("HH:mm DD/MM/YYYY")}
+                    </div>
+                }
                 style={{ marginTop: '24px' }}
             >
-                {/* <Alert
-                    message={
-                        <div>
-                            <Text strong>Thông tin khảo sát:</Text>
-                            <ul style={{ marginTop: '8px', marginBottom: 0, paddingLeft: '20px' }}>
-                                <li>Tổng số câu hỏi: {totalQuestions}</li>
-                                <li>Câu hỏi bắt buộc: {requiredQuestions}</li>
-                                <li>Thời gian ước tính: {Math.ceil(totalQuestions * 0.5)} phút</li>
-                            </ul>
-                        </div>
-                    }
-                    type="info"
-                    showIcon
-                    style={{ marginBottom: '24px' }}
-                /> */}
-
                 <Form
                     form={surveyForm}
                     onFinish={handleSurveySubmit}
@@ -357,6 +383,7 @@ const ClientPostPageDetail: React.FC = () => {
             </Card>
         );
     };
+
 
     if (loading) {
         return (
@@ -416,10 +443,22 @@ const ClientPostPageDetail: React.FC = () => {
                                 </Flex>
                             )}
 
-                            {postDetail.createdBy === userEmail && (
+                            {postDetail.createdBy === user.email && (
                                 <Space>
+                                    {user.role !== undefined && postDetail.type === "SURVEY" && (
+                                        <Button
+                                            type="primary"
+                                            icon={<ProjectOutlined />}
+                                            onClick={() => { setOpenSurveyResult(true) }}
+                                        >
+                                            Xem kết quả khảo sát
+                                        </Button>
+
+                                    )}
+
                                     <Button
-                                        type="primary"
+                                        color="primary"
+                                        variant="outlined"
                                         icon={<EditOutlined />}
                                         onClick={() => { setOpenUpdateModal(true) }}
                                     >
@@ -455,43 +494,12 @@ const ClientPostPageDetail: React.FC = () => {
                         </Paragraph>
                     </div>
 
-                    {/* Survey Section - Only show for SURVEY type */}
                     {postDetail.type === 'SURVEY' && renderSurveySection()}
 
                     <Divider />
 
-                    {/* Comments Section - Only show for ANNOUNCEMENT type */}
                     {postDetail.type === 'ANNOUNCEMENT' && (
                         <div>
-                            <Title level={5}>
-                                <MessageOutlined /> Bình luận ({comments.length})
-                            </Title>
-
-                            {/* Comment Form */}
-                            <Form form={commentForm} onFinish={handleComment} style={{ marginBottom: "24px" }}>
-                                <Form.Item
-                                    name="comment"
-                                    rules={[
-                                        { required: true, message: "Vui lòng nhập nội dung bình luận" },
-                                        { min: 5, message: "Bình luận phải có ít nhất 5 ký tự" }
-                                    ]}
-                                >
-                                    <TextArea
-                                        rows={3}
-                                        placeholder="Viết bình luận của bạn..."
-                                    />
-                                </Form.Item>
-                                <Form.Item>
-                                    <Button
-                                        type="primary"
-                                        htmlType="submit"
-                                        loading={commentLoading}
-                                    >
-                                        Gửi bình luận
-                                    </Button>
-                                </Form.Item>
-                            </Form>
-
                             {/* Comments List */}
                             {comments.length > 0 ? (
                                 <List
@@ -526,10 +534,35 @@ const ClientPostPageDetail: React.FC = () => {
                                     padding: "48px 0",
                                     color: "#999"
                                 }}>
-                                    <MessageOutlined style={{ fontSize: "48px", marginBottom: "16px" }} />
+                                    <MessageOutlined style={{ fontSize: "32px", marginBottom: "16px" }} />
                                     <Paragraph style={{ color: "#999" }}>Chưa có bình luận nào</Paragraph>
                                 </div>
                             )}
+
+                            {/* Comment Form */}
+                            <Form form={commentForm} onFinish={handleComment} style={{ marginBottom: "24px" }}>
+                                <Form.Item
+                                    name="comment"
+                                    rules={[
+                                        { required: true, message: "Vui lòng nhập nội dung bình luận" },
+                                        { min: 5, message: "Bình luận phải có ít nhất 5 ký tự" }
+                                    ]}
+                                >
+                                    <TextArea
+                                        rows={3}
+                                        placeholder="Viết bình luận của bạn..."
+                                    />
+                                </Form.Item>
+                                <Form.Item>
+                                    <Button
+                                        type="primary"
+                                        htmlType="submit"
+                                        loading={commentLoading}
+                                    >
+                                        Gửi bình luận
+                                    </Button>
+                                </Form.Item>
+                            </Form>
                         </div>
                     )}
                 </Card>
@@ -542,6 +575,12 @@ const ClientPostPageDetail: React.FC = () => {
                     onSuccess={() => {
                         if (id) fetchPostDetail(id)
                     }}
+                />
+
+                <SurveyResultsModal
+                    openModal={openSurveyResult}
+                    setOpenModal={() => setOpenSurveyResult(false)}
+                    dataInit={postDetail}
                 />
             </div>
         </div>

@@ -1,3 +1,4 @@
+import { ISurveyData } from "@/pages/client/home/modal.survey-chart";
 import {
   IBackendRes,
   IAccount,
@@ -299,6 +300,10 @@ export const callCreateSurveyBulk = (surveyData: ICreateSurveyBulk) => {
     "/api/v1/posts/survey-bulk",
     surveyData
   );
+};
+
+export const callFetchSurveyResult = (id: string) => {
+  return axios.get<IBackendRes<ISurveyData>>(`/api/v1/posts/${id}/stats`);
 };
 
 /**
