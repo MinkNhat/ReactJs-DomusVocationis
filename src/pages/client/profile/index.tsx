@@ -15,12 +15,11 @@ import {
     Upload,
     message,
     Popconfirm,
-    Select,
-    DatePicker,
-    Switch,
     notification,
-    Spin
+    Spin,
+    Image
 } from 'antd';
+import type { UploadFile, UploadProps } from 'antd';
 import {
     UserOutlined,
     EditOutlined,
@@ -38,14 +37,23 @@ import {
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { FORMATE_DATE_VN } from '@/config/utils';
-import { callChangeUserPassword, callFetchUserById, callLogout } from '@/config/api';
+import { callChangeUserPassword, callFetchUserById, callLogout, callUpdateAvatar, callUploadSingleFile } from '@/config/api';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { setLogoutAction } from '@/redux/slice/accountSlide';
 import { IUser } from '@/types/backend';
-import { set } from 'lodash';
 
 const { Title, Text } = Typography;
+
+type FileType = Parameters<NonNullable<UploadProps['beforeUpload']>>[0];
+
+const getBase64 = (file: FileType): Promise<string> =>
+    new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = (error) => reject(error);
+    });
 
 const ProfilePage = () => {
     const [userInfo, setUserInfo] = useState<IUser | null>(null);
@@ -54,6 +62,8 @@ const ProfilePage = () => {
     const [avatarModalVisible, setAvatarModalVisible] = useState(false);
     const [passwordForm] = Form.useForm();
     const [loading, setLoading] = useState(true);
+    const [uploadingAvatar, setUploadingAvatar] = useState(false);
+    const [fileList, setFileList] = useState<UploadFile[]>([]);
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
 
@@ -95,14 +105,66 @@ const ProfilePage = () => {
         }
     };
 
-    const handleAvatarUpload = (info: any) => {
-        console.log(info);
-        if (info.file.status === 'done') {
-            message.success('Cập nhật avatar thành công!');
-            setAvatarModalVisible(false);
-        } else if (info.file.status === 'error') {
-            message.error('Upload avatar thất bại!');
+    const handleAvatarChange: UploadProps['onChange'] = async ({ fileList: newFileList }) => {
+        const filesWithPreview = await Promise.all(
+            newFileList.map(async (file) => {
+                if (!file.url && !file.preview && file.originFileObj) {
+                    file.preview = await getBase64(file.originFileObj as FileType);
+                }
+                return file;
+            })
+        );
+        setFileList(filesWithPreview);
+    };
+
+    const handleBeforeUpload = (file: FileType) => {
+        const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
+        if (!isJpgOrPng) {
+            message.error('Chỉ chấp nhận định dạng JPEG/PNG');
+            return Upload.LIST_IGNORE;
         }
+
+        const isLt5M = file.size / 1024 / 1024 < 5;
+        if (!isLt5M) {
+            message.error('Kích thước file lớn hơn 5MB');
+            return Upload.LIST_IGNORE;
+        }
+
+        return false; // Prevent auto upload
+    };
+
+    const handleConfirmUpload = async () => {
+        if (fileList.length === 0) {
+            message.warning('Vui lòng chọn ảnh');
+            return;
+        }
+
+        try {
+            setUploadingAvatar(true);
+
+            const file = fileList[0].originFileObj;
+            const uploadRes = await callUploadSingleFile(file, 'avatar');
+
+            if (uploadRes && uploadRes.data) {
+                const avatarUrl = uploadRes.data.fileName;
+
+                await callUpdateAvatar(user.id, { fileName: avatarUrl });
+                setUserInfo(prev => prev ? { ...prev, avatar: avatarUrl } : null);
+
+                message.success('Cập nhật avatar thành công');
+                handleCancelAvatarModal();
+                fetchUserInfo();
+            }
+        } catch (error) {
+            message.error('Có lỗi xảy ra khi upload avatar');
+        } finally {
+            setUploadingAvatar(false);
+        }
+    };
+
+    const handleCancelAvatarModal = () => {
+        setAvatarModalVisible(false);
+        setFileList([]);
     };
 
     const handleLogout = async () => {
@@ -157,7 +219,7 @@ const ProfilePage = () => {
                     >
                         <Avatar
                             size={160}
-                            src={userInfo?.avatar}
+                            src={`${import.meta.env.VITE_BACKEND_URL}/storage/${userInfo?.avatar}`}
                             icon={<UserOutlined />}
                             style={{ marginBottom: '16px' }}
                         />
@@ -369,6 +431,7 @@ const ProfilePage = () => {
                 </Col>
             </Row>
 
+            {/* Modal đổi mật khẩu */}
             <Modal
                 title="Đổi mật khẩu"
                 open={changePasswordVisible}
@@ -422,42 +485,89 @@ const ProfilePage = () => {
                 </Form>
             </Modal>
 
+            {/* Modal đổi avatar */}
             <Modal
                 title="Thay đổi avatar"
                 open={avatarModalVisible}
-                onCancel={() => setAvatarModalVisible(false)}
-                footer={null}
+                onCancel={handleCancelAvatarModal}
+                onOk={handleConfirmUpload}
+                okText={uploadingAvatar ? 'Đang upload...' : 'Xác nhận'}
+                cancelText="Hủy"
+                confirmLoading={uploadingAvatar}
+                okButtonProps={{ disabled: fileList.length === 0 }}
+                width={400}
             >
-                <div style={{ textAlign: 'center' }}>
-                    <Avatar
-                        size={120}
-                        src={userInfo?.avatar}
-                        icon={<UserOutlined />}
-                        style={{ marginBottom: '20px' }}
-                    />
-                    <br />
-                    <Upload
-                        name="avatar"
-                        showUploadList={false}
-                        onChange={handleAvatarUpload}
-                        beforeUpload={(file) => {
-                            const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
-                            if (!isJpgOrPng) {
-                                message.error('Chỉ có thể upload file JPG/PNG!');
-                            }
-                            const isLt2M = file.size / 1024 / 1024 < 2;
-                            if (!isLt2M) {
-                                message.error('Kích thước file phải nhỏ hơn 2MB!');
-                            }
-                            return isJpgOrPng && isLt2M;
-                        }}
-                    >
-                        <Button icon={<CameraOutlined />} type="primary">
-                            Chọn ảnh mới
-                        </Button>
-                    </Upload>
+                <div style={{ display: "flex", justifyContent: "center" }}>
+                    {fileList.length >= 1 ? (
+                        <div
+                            style={{
+                                width: 200,
+                                height: 200,
+                                borderRadius: "50%",
+                                overflow: "hidden",
+                                position: "relative",
+                                border: "2px solid #d9d9d9",
+                            }}
+                        >
+                            <Image
+                                src={fileList[0].preview || fileList[0].url || fileList[0].thumbUrl}
+                                alt="avatar"
+                                style={{
+                                    width: "100%",
+                                    height: "100%",
+                                    objectFit: "cover",
+                                }}
+                                preview={{
+                                    mask: (
+                                        <Space>
+                                            <span style={{ color: 'white' }}>Xem</span>
+                                            <Button
+                                                type="text"
+                                                danger
+                                                size="small"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setFileList([]);
+                                                }}
+                                                style={{ color: 'white' }}
+                                            >
+                                                Xóa
+                                            </Button>
+                                        </Space>
+                                    )
+                                }}
+                            />
+                        </div>
+                    ) : (
+                        <Upload
+                            fileList={fileList}
+                            onChange={handleAvatarChange}
+                            beforeUpload={handleBeforeUpload}
+                            accept="image/png,image/jpeg"
+                            maxCount={1}
+                            showUploadList={false}
+                        >
+                            <div
+                                style={{
+                                    width: 200,
+                                    height: 200,
+                                    borderRadius: "50%",
+                                    border: "2px dashed #d9d9d9",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    cursor: "pointer",
+                                }}
+                            >
+                                <CameraOutlined style={{ fontSize: 48, color: "#999" }} />
+                                <div style={{ marginTop: 8, fontSize: 16 }}>Chọn ảnh</div>
+                            </div>
+                        </Upload>
+                    )}
                 </div>
             </Modal>
+
         </div>
     );
 };

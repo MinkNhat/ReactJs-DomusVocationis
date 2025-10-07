@@ -49,6 +49,7 @@ const LayoutClient = () => {
 
         const newActiveMenu = getActiveMenuFromPath(location.pathname);
         dispatch(setActiveMenu(newActiveMenu));
+        console.log(user);
     }, [location, dispatch]);
 
 
@@ -196,7 +197,9 @@ const LayoutClient = () => {
                                     <Dropdown menu={{ items: itemsDropdown }} trigger={['click']}>
                                         <Space style={{ cursor: "pointer" }}>
                                             <span>Welcome {user?.name}</span>
-                                            <Avatar> {user?.name?.substring(0, 2)?.toUpperCase()} </Avatar>
+                                            <Avatar src={`${import.meta.env.VITE_BACKEND_URL}/storage/${user?.avatar}`}>
+                                                {user?.name?.substring(0, 2)?.toUpperCase()}
+                                            </Avatar>
 
                                         </Space>
                                     </Dropdown>}

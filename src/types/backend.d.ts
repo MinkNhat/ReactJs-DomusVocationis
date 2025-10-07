@@ -25,6 +25,7 @@ export interface IAccount {
     id: string;
     email: string;
     name: string;
+    avatar?: string;
     role: {
       id: string;
       name: string;
@@ -380,4 +381,8 @@ export interface IResVNPayPayment {
 export interface IReqChangePassword {
   oldPassword: string;
   newPassword: string;
+}
+
+export interface IReqUpdateAvatar {
+  fileName: string;
 }

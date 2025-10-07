@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { callFetchAccount } from "@/config/api";
+import { stat } from "fs";
 
 // First, create the thunk
 export const fetchAccount = createAsyncThunk(
@@ -19,6 +20,7 @@ interface IState {
     id: string;
     email: string;
     name: string;
+    avatar?: string;
     role: {
       id?: string;
       name?: string;
@@ -43,6 +45,7 @@ const initialState: IState = {
     id: "",
     email: "",
     name: "",
+    avatar: "",
     role: {
       id: "",
       name: "",
@@ -68,6 +71,7 @@ export const accountSlide = createSlice({
       state.user.id = action?.payload?.id;
       state.user.email = action.payload.email;
       state.user.name = action.payload.name;
+      state.user.avatar = action.payload.avatar;
       state.user.role = action?.payload?.role;
 
       if (!action?.payload?.user?.role) state.user.role = {};
@@ -80,6 +84,7 @@ export const accountSlide = createSlice({
         id: "",
         email: "",
         name: "",
+        avatar: "",
         role: {
           id: "",
           name: "",
@@ -108,6 +113,7 @@ export const accountSlide = createSlice({
         state.user.id = action?.payload?.user?.id;
         state.user.email = action.payload.user?.email;
         state.user.name = action.payload.user?.name;
+        state.user.avatar = action.payload.user?.avatar;
         state.user.role = action?.payload?.user?.role;
         if (!action?.payload?.user?.role) state.user.role = {};
         state.user.role.permissions =

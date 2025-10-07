@@ -21,6 +21,7 @@ import {
   IVNPayPayment,
   IResVNPayPayment,
   IReqChangePassword,
+  IReqUpdateAvatar,
 } from "@/types/backend";
 import axios from "config/axios-customize";
 
@@ -180,6 +181,12 @@ export const callChangeUserPassword = (id: string, req: IReqChangePassword) => {
       ...req,
     }
   );
+};
+
+export const callUpdateAvatar = (id: string, req: IReqUpdateAvatar) => {
+  return axios.patch<IBackendRes<IUser>>(`/api/v1/users/upload-avatar/${id}`, {
+    ...req,
+  });
 };
 
 /**

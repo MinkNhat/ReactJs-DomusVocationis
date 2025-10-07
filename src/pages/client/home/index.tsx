@@ -265,7 +265,7 @@ const HomePage = () => {
     );
 
     const renderPostList = () => {
-        if (!selectedCategory && !loading.initializing) {
+        if (!selectedCategory) {
             return (
                 <Card style={{ height: '100%', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
                     <Carousel

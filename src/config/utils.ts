@@ -385,3 +385,21 @@ export const getActiveMenuFromPath = (pathname: string): string => {
   //default
   return "/";
 };
+
+export const generateColors = (count: number) => {
+  const colors = [
+    "#1890ff",
+    "#52c41a",
+    "#faad14",
+    "#f5222d",
+    "#722ed1",
+    "#13c2c2",
+    "#eb2f96",
+    "#fa8c16",
+    "#a0d911",
+    "#2f54eb",
+  ];
+
+  const shuffledColors = [...colors].sort(() => Math.random() - 0.5);
+  return shuffledColors.slice(0, count);
+};

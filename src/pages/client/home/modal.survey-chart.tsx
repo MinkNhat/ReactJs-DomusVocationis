@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Modal, Card, Typography, Row, Col, Space, Statistic, Divider } from 'antd';
+import { Modal, Card, Typography, Row, Col, Space, Statistic, Divider, Tag } from 'antd';
 import {
     Chart as ChartJS,
     ArcElement,
@@ -13,6 +13,7 @@ import {
 } from 'chart.js';
 import { callFetchSurveyResult } from '@/config/api';
 import { IPost } from '@/types/backend';
+import { generateColors } from '@/config/utils';
 
 ChartJS.register(
     ArcElement,
@@ -62,47 +63,18 @@ const SurveyResultsModal: React.FC<IProps> = ({
     const [surveyData, setSurveyData] = useState<ISurveyData | null>(null);
 
     useEffect(() => {
-        fetchSurveyData();
-
-        if (dataInit.questions && dataInit.questions.length > 0) {
-            console.log(dataInit.questions[1].allowMultiple);
+        const fetchSurveyData = async () => {
+            if (dataInit.id) {
+                let res = await callFetchSurveyResult(dataInit?.id);
+                if (res && res.data) {
+                    setSurveyData(res.data);
+                }
+            }
         }
+
+        fetchSurveyData();
     }, [dataInit])
 
-    const fetchSurveyData = async () => {
-        if (dataInit.id) {
-            let res = await callFetchSurveyResult(dataInit?.id);
-            if (res && res.data) {
-                setSurveyData(res.data);
-                console.log(res);
-            }
-        }
-    }
-
-    const generateColors = (count: number) => {
-        const colors = [
-            '#1890ff', '#52c41a', '#faad14', '#f5222d', '#722ed1',
-            '#13c2c2', '#eb2f96', '#fa8c16', '#a0d911', '#2f54eb'
-        ];
-
-        const shuffledColors = [...colors].sort(() => Math.random() - 0.5);
-
-        // Nếu cần nhiều màu hơn số màu có sẵn, tạo thêm màu random
-        if (count > colors.length) {
-            const additionalColors = [];
-            for (let i = colors.length; i < count; i++) {
-                const hue = Math.floor(Math.random() * 360);
-                const saturation = 60 + Math.floor(Math.random() * 30);
-                const lightness = 45 + Math.floor(Math.random() * 20);
-                additionalColors.push(`hsl(${hue}, ${saturation}%, ${lightness}%)`);
-            }
-            return [...shuffledColors, ...additionalColors].slice(0, count);
-        }
-
-        return shuffledColors.slice(0, count);
-    };
-
-    // Kiểm tra xem câu hỏi có cho phép nhiều lựa chọn không
     const isMultipleChoice = (questionId: string) => {
         const question = dataInit.questions?.find(q => q.id === questionId);
         return question?.allowMultiple || false;
@@ -115,7 +87,7 @@ const SurveyResultsModal: React.FC<IProps> = ({
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        // Destroy nếu đã tồn tại chart id
+        // Destroy nếu đã tồn tại
         if (chartRefs.current[questionData.questionId]) {
             chartRefs.current[questionData.questionId].destroy();
         }
@@ -160,10 +132,8 @@ const SurveyResultsModal: React.FC<IProps> = ({
                         callbacks: {
                             label: function (context: any) {
                                 const label = context.label || '';
-                                const value = context.parsed;
-                                const percentage = allowMultiple
-                                    ? ((value / totalResponses) * 100)
-                                    : questionData.chartData[context.dataIndex]?.percentage || 0;
+                                const value = allowMultiple ? context.parsed.y : context.parsed;
+                                const percentage = allowMultiple ? ((value / totalResponses) * 100) : questionData.chartData[context.dataIndex]?.percentage || 0;
 
                                 return `${label}: ${value} phiếu (${percentage.toFixed(1)}%)`;
                             }
@@ -190,6 +160,7 @@ const SurveyResultsModal: React.FC<IProps> = ({
         chartRefs.current[questionData.questionId] = chart;
     };
 
+    // delay để chắc chắn DOM đã được tạo
     useEffect(() => {
         if (openModal && surveyData?.questionsStats) {
             setTimeout(() => {
@@ -209,71 +180,77 @@ const SurveyResultsModal: React.FC<IProps> = ({
 
     const renderQuestionCard = (question: IQuestionStats, index: number) => {
         const allowMultiple = isMultipleChoice(question.questionId);
-
-        // Tính tổng phản hồi thực tế cho việc hiển thị percentage
-        const totalResponses = allowMultiple
-            ? question.chartData.reduce((sum, item) => sum + item.count, 0)
-            : question.totalAnswers;
+        const totalResponses = allowMultiple ? question.chartData.reduce((sum, item) => sum + item.count, 0) : question.totalAnswers;
 
         return (
             <Card
                 key={question.questionId}
-                className="mb-6 shadow-sm"
+                style={{ marginBottom: '24px' }}
                 title={
                     <Space>
-                        <Text strong>Câu hỏi {index + 1}: {question.questionText}</Text>
+                        <Text strong>Câu hỏi: {question.questionText}</Text>
                         {allowMultiple && (
-                            <Text type="secondary" className="text-xs bg-blue-100 px-2 py-1 rounded">
+                            <Tag color="blue">
                                 Nhiều lựa chọn
-                            </Text>
+                            </Tag>
                         )}
                     </Space>
                 }
                 extra={
                     <Space>
                         <Text type="secondary">
-                            {allowMultiple
-                                ? `Tổng lượt chọn: ${totalResponses}`
-                                : `Tổng phản hồi: ${question.totalAnswers}`
-                            }
+                            {`Số lượt phản hồi: ${question.totalAnswers}`}
                         </Text>
                     </Space>
                 }
             >
-                <Row gutter={[24, 24]}>
-                    <Col xs={24} md={12}>
-                        <div className={`${allowMultiple ? 'h-96' : 'h-80'} flex items-center justify-center`}>
+                <Row gutter={[32, 32]}>
+                    <Col xs={24} md={14}>
+                        <div style={{
+                            height: allowMultiple ? '384px' : '320px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}>
                             <canvas
                                 id={`chart-${question.questionId}`}
-                                className="max-w-full max-h-full"
+                                style={{
+                                    maxWidth: '100%',
+                                    maxHeight: '100%'
+                                }}
                             />
                         </div>
                     </Col>
-                    <Col xs={24} md={12}>
-                        <div className="space-y-4">
-                            <Title level={5} className="text-gray-700">Chi tiết kết quả:</Title>
-                            {question.chartData.map((option, idx) => (
-                                <div
-                                    key={option.optionId}
-                                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                                >
-                                    <div className="flex items-center space-x-3">
-                                        <div
-                                            className="w-4 h-4 rounded-full"
-                                            style={{ backgroundColor: generateColors(question.chartData.length)[idx] }}
-                                        />
-                                        <Text>{option.label}</Text>
+                    <Col xs={24} md={10}>
+                        <div>
+                            <Title level={5} style={{ color: '#555' }}>Chi tiết kết quả:</Title>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                {question.chartData.map((option, idx) => (
+                                    <div
+                                        key={option.optionId}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                            padding: '6px 24px',
+                                            backgroundColor: '#f5f5f5',
+                                            borderRadius: '8px'
+                                        }}
+                                    >
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                            <Text>{option.label}</Text>
+                                        </div>
+                                        <div style={{ textAlign: 'right' }}>
+                                            <div style={{ fontWeight: '600', fontSize: '18px' }}>{option.count}</div>
+                                            <Text type="secondary" style={{ fontSize: '14px' }}>
+                                                {allowMultiple
+                                                    ? ((option.count / totalResponses) * 100).toFixed(1)
+                                                    : option.percentage.toFixed(1)}%
+                                            </Text>
+                                        </div>
                                     </div>
-                                    <div className="text-right">
-                                        <div className="font-semibold text-lg">{option.count}</div>
-                                        <Text type="secondary" className="text-sm">
-                                            {allowMultiple
-                                                ? ((option.count / totalResponses) * 100).toFixed(1)
-                                                : option.percentage.toFixed(1)}%
-                                        </Text>
-                                    </div>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                         </div>
                     </Col>
                 </Row>
@@ -285,7 +262,7 @@ const SurveyResultsModal: React.FC<IProps> = ({
         <Modal
             title={
                 <Space>
-                    <span>Kết quả khảo sát: {surveyData?.title}</span>
+                    <span>Kết quả khảo sát</span>
                 </Space>
             }
             open={openModal}
@@ -294,11 +271,15 @@ const SurveyResultsModal: React.FC<IProps> = ({
             footer={null}
             className="survey-results-modal"
         >
-            <div className="max-h-96 overflow-y-auto">
-                {/* Summary Statistics */}
-                <Card className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50">
-                    <Row gutter={24}>
-                        <Col span={8}>
+            <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+                <Card
+                    style={{
+                        marginBottom: '24px',
+                        background: '#e6f3ff'
+                    }}
+                >
+                    <Row gutter={24} style={{ textAlign: 'center' }}>
+                        <Col span={8} >
                             <Statistic
                                 title="Tổng số người tham gia"
                                 value={surveyData?.totalParticipants || 0}
@@ -322,14 +303,8 @@ const SurveyResultsModal: React.FC<IProps> = ({
                     </Row>
                 </Card>
 
-                <Divider orientation="left">
-                    <Text strong className="text-lg">Chi tiết từng câu hỏi</Text>
-                </Divider>
-
-                {/* Questions Results */}
-                {surveyData?.questionsStats?.map((question, index) =>
-                    renderQuestionCard(question, index)
-                )}
+                {/* render questions */}
+                {surveyData?.questionsStats?.map((question, index) => renderQuestionCard(question, index))}
             </div>
         </Modal>
     );
