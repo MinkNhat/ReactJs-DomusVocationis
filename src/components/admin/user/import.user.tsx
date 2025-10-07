@@ -6,7 +6,7 @@ import Exceljs from "exceljs";
 import { callBulkCreateUser } from "@/config/api";
 import { IUser } from "@/types/backend";
 import templateFile from "@/assets/template/user-import-template.xlsx?url";
-import { convertGender } from "@/config/utils";
+import { convertGender, convertSlug } from "@/config/utils";
 
 const { Dragger } = Upload;
 
@@ -20,6 +20,7 @@ const ImportUser = (props: IProps) => {
     const { openModalImport, setOpenModalImport, reloadTable } = props;
     const [dataImport, setDataImport] = useState<IUser[]>([]);
     const [isSubmit, setIsSubmit] = useState<boolean>(false);
+    const [pagination, setPagination] = useState({ current: 1, pageSize: 10 });
 
     const { message, notification } = App.useApp();
 
@@ -39,7 +40,7 @@ const ImportUser = (props: IProps) => {
         async onChange(info) {
             const { status } = info.file;
             if (status !== 'uploading') {
-                console.log(info.file, info.fileList);
+                // console.log(info.file, info.fileList);
             }
             if (status === 'done') {
                 message.success(`${info.file.name} file uploaded successfully.`);
@@ -54,24 +55,22 @@ const ImportUser = (props: IProps) => {
                     let jsonData: IUser[] = [];
                     workbook.worksheets.forEach(function (sheet) {
                         // first row is header
-                        let firstRow = sheet.getRow(1);
+                        let firstRow = sheet.getRow(9);
                         if (!firstRow.cellCount) return;
 
                         let keys = firstRow.values as any[];
                         sheet.eachRow((row, rowNumber) => {
-                            if (rowNumber === 1) return;
+                            if (rowNumber <= 9) return;
                             let values = row.values as any;
                             let obj: any = {};
                             for (let i = 1; i < keys.length; i++) {
                                 obj[keys[i]] = values[i];
                             }
-                            jsonData.push(obj);
-                        })
 
-                        // set id -> avoid warning
-                        // jsonData.map((item, index) => {
-                        //     item.id = index.toString();
-                        // })
+                            if (obj["fullName"] && obj["email"] && obj["phone"]) {
+                                jsonData.push(obj);
+                            }
+                        })
                     });
 
                     setDataImport(jsonData);
@@ -90,10 +89,13 @@ const ImportUser = (props: IProps) => {
     const columns: TableColumnsType<IUser> = [
         {
             title: 'STT',
-            dataIndex: 'index',
             width: 50,
             render: (value, record, index) => {
-                return <span>{index + 1}</span>;
+                return (
+                    <span>
+                        {(pagination.current - 1) * pagination.pageSize + index + 1}
+                    </span>
+                );
             },
             fixed: 'left',
         },
@@ -200,16 +202,24 @@ const ImportUser = (props: IProps) => {
         }
     ];
 
+    function generatePassword(fullName: string, phone: string) {
+        if (!phone || !fullName) return "";
+
+        const lastPart = convertSlug(fullName).trim().split("-").pop() || "";
+        return phone + lastPart.toLowerCase();
+    }
+
     const handleSubmit = async () => {
         setIsSubmit(true);
         const dataSubmit = dataImport.map(item => ({
             ...item,
-            password: import.meta.env.VITE_USER_CREATE_DEFAULT_PASSWORD
+            password: generatePassword(item.fullName, item.phone),
         }))
 
-        console.log(dataSubmit);
+        console.log("dataSubmit", dataSubmit);
 
         const res = await callBulkCreateUser(dataSubmit);
+        console.log("res", res);
         if (res.data) {
             notification.info({
                 message: "Import users",
@@ -235,7 +245,7 @@ const ImportUser = (props: IProps) => {
     return (
         <>
             <Modal title="Import người dùng"
-                width={"60vw"}
+                width={"80vw"}
                 open={openModalImport}
                 onOk={() => handleSubmit()}
                 onCancel={() => {
@@ -268,6 +278,13 @@ const ImportUser = (props: IProps) => {
                         dataSource={dataImport}
                         columns={columns}
                         scroll={{ x: 'max-content' }}
+                        pagination={{
+                            current: pagination.current,
+                            pageSize: pagination.pageSize,
+                            onChange: (page, pageSize) => {
+                                setPagination({ current: page, pageSize });
+                            },
+                        }}
                     />
                 </div>
             </Modal>

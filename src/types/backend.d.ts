@@ -120,7 +120,7 @@ export interface IUser {
   christianName?: string;
   fullName: string;
   email: string;
-  phone?: string;
+  phone: string;
   password?: string;
   birth?: Date;
   gender?: string;
