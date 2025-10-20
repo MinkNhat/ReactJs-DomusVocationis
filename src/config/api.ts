@@ -22,6 +22,7 @@ import {
   IResVNPayPayment,
   IReqChangePassword,
   IReqUpdateAvatar,
+  IStats,
 } from "@/types/backend";
 import axios from "config/axios-customize";
 
@@ -82,6 +83,11 @@ export const callUploadSingleFile = (file: any, folderType: string) => {
       "Content-Type": "multipart/form-data",
     },
   });
+};
+
+// Module stats
+export const callFetchStats = () => {
+  return axios.get<IBackendRes<IStats>>(`/api/v1/stats`);
 };
 
 /**

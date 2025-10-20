@@ -13,13 +13,16 @@ import {
     ScheduleOutlined,
     FileTextOutlined,
     SettingOutlined,
+    FacebookOutlined,
+    YoutubeOutlined,
 } from '@ant-design/icons';
-import { Layout, Menu, Dropdown, Space, message, Avatar, Button, theme, Image } from 'antd';
+import { Layout, Menu, Dropdown, Space, message, Avatar, Button, theme, Image, Typography } from 'antd';
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Link } from 'react-router-dom';
 import { callLogout } from 'config/api';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
-import { isMobile } from 'react-device-detect';
+// import { isMobile } from 'react-device-detect';
+import { useMediaQuery } from 'react-responsive';
 import type { MenuProps } from 'antd';
 import { setActiveMenu, setLogoutAction } from '@/redux/slice/accountSlide';
 import styles from '@/styles/client.module.scss';
@@ -27,6 +30,7 @@ import { getActiveMenuFromPath } from '@/config/utils';
 import logo from '@/assets/logoTVB.png';
 
 const { Sider, Content, Footer } = Layout;
+const { Text } = Typography;
 
 const LayoutClient = () => {
     const location = useLocation();
@@ -41,6 +45,7 @@ const LayoutClient = () => {
     const dispatch = useAppDispatch();
     const isAuthenticated = useAppSelector(state => state.account.isAuthenticated);
     const activeMenu = useAppSelector(state => state.account.activeMenu);
+    const isMobile = useMediaQuery({ maxWidth: 768 });
 
     useEffect(() => {
         if (rootRef && rootRef.current) {
@@ -49,7 +54,7 @@ const LayoutClient = () => {
 
         const newActiveMenu = getActiveMenuFromPath(location.pathname);
         dispatch(setActiveMenu(newActiveMenu));
-        console.log(user);
+        console.log(isMobile);
     }, [location, dispatch]);
 
 
@@ -206,11 +211,20 @@ const LayoutClient = () => {
                             </div>
                         </div>
                     }
+
                     <Content style={{ padding: '15px' }}>
                         <Outlet />
                     </Content>
-                    <Footer style={{ padding: 10, textAlign: 'center', backgroundColor: "#222831" }}>
-                        <span style={{ color: "white" }}> 2025 <HeartTwoTone /></span>
+
+                    <Footer style={{
+                        textAlign: 'center',
+                        background: '#001529',
+                        color: '#fff',
+                        padding: '12px 0'
+                    }}>
+                        <Text style={{ color: 'rgba(255, 255, 255, 0.65)' }}>
+                            © 2025 Tong Viet Buong. All rights reserved.
+                        </Text>
                     </Footer>
                 </Layout>
             </Layout>

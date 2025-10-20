@@ -386,3 +386,9 @@ export interface IReqChangePassword {
 export interface IReqUpdateAvatar {
   fileName: string;
 }
+
+export interface IStats {
+  totalPost: number;
+  totalActiveUser: number;
+  totalPeriod: number;
+}
